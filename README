@@ -1,0 +1,16 @@
+Note that this is is a *partial* repackaging of elements of the DVIOUT
+package by Toshio OSHIMA, Yoshiki OTOBE, and Kazunori ASAYAMA.
+Here we just want dvispc, chkfont and propw. Small description:
+
+* chkfont.exe  : A utility to check font in DVI/TFM/JFM/FONT files
+* chkfont.txt  : Document of chkfont.exe
+* dvispc.exe   : A utilty to correct the page-independence of DVI file using 
+                 color specials or tpic specials and to transform between 
+                 a DVI file and a text file
+* dvispc.txt   : A document of dvispc.exe (in Japanese)
+* dvispce.txt  : A document of dvispc.exe
+* propw.exe    : A utility to make jfm files for Japanese proportional font
+* propw0.txt   : Document of propw.exe (in Japanese)
+
+These files are licensed under the Expat license.
+-- Hironobu Yamashita, May 2017
