@@ -151,7 +151,7 @@ struct DIMENSION_REC {
 
 
 #define	MAX_INCL	2048		/* maximal number of embedded files */
-#ifndef UNIX
+#ifndef MAX_PATH
 #define	MAX_PATH	0x200		/* maximal length of path name */
 #endif
 

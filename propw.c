@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 #ifdef UNIX
-#include <io.h>
+#include <unistd.h>
 #include <string.h>
 #else
 #ifdef WIN32

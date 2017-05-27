@@ -50,7 +50,9 @@ int		strlcmp(const char *, const char *);
 #ifndef	MSVC
 long	filelength(int);
 int 	strcmpi(const char *, const char *);
+#ifndef GCC
 char	*stpcpy(char *, const char *);
+#endif
 #endif
 
 #if !defined(GCC1)  || defined(UNIX)
