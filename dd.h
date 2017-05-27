@@ -47,7 +47,7 @@
 
 int		strlcmp(const char *, const char *);
 
-#ifdef	GCC
+#ifndef	MSVC
 long	filelength(int);
 int 	strcmpi(const char *, const char *);
 char	*stpcpy(char *, const char *);
@@ -137,10 +137,10 @@ extern uchar *get_near_work(uint);
 /* definitons for device driver */
 
 
-#ifdef	GCC
+//#ifdef	GCC
 #define far
 #define	huge
-#endif
+//#endif
 
 #define BUFFER    uchar far
 #define HUGE_BUF  uchar huge

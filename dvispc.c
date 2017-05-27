@@ -151,7 +151,9 @@ struct DIMENSION_REC {
 
 
 #define	MAX_INCL	2048		/* maximal number of embedded files */
+#ifndef UNIX
 #define	MAX_PATH	0x200		/* maximal length of path name */
+#endif
 
 #define	ID			2
 #define	IDP			3
@@ -381,7 +383,7 @@ void usage(void)
 	"   -v: verbose       -j: Japanese characters       -l: location\n"
 	"   -r: replace  (-rorg_1=new_1/org_2=new_2...  eg. -rxxx=special/fnt=font)\n"
 	"   -p: T:preamble  L:postamble  pages with - (eg: -pT-L  -pT2/4-8L  -p-4 etc.)\n"
-	"   -t: comaptible to DLT (the followings are suboptions if necessary eg. -t02)\n"
+	"   -t: comaptible to DTL (the followings are suboptions if necessary eg. -t02)\n"
 	"       0:str 1:ch 2:ch2 3:cmd 4:c-sum 5:dir/name 6:err 7:page 8:oct 9:str0\n"
 	);
 	exit(1);
