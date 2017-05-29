@@ -4,6 +4,7 @@
  *		A program to modify DVI file to be page-independent
  *		Support the following specials
  *			color specials:  push, pop, background
+ *			pdf specials  :  pdf:bcolor, pdf:ecolor, pdf:bgcolor
  *			tpic specials :  sh, pn
  *
  *							Written by SHIMA
@@ -232,6 +233,7 @@ int  f_sjis = 1;
 int  f_pos = 0;			/* position */
 
 int  f_background = 0;
+int  f_pdf_bgcolor = 0;
 int  f_pn = 0;
 int  f_backup = 0;		/* output=input */
 int  f_ptex = 0;
@@ -240,11 +242,15 @@ char *out_pages ="T-L";
 
 int  color_depth;
 int  color_depth_max;
+int  pdf_color_depth;
+int  pdf_color_depth_max;
 int  color_under;
 int  f_color;
 char *color_pt[MAX_COLOR];
+char *pdf_color_pt[MAX_COLOR];
 char color_buf[COLOR_BUF_SIZE];
 char background[MAX_LEN];
+char pdf_bgcolor[MAX_LEN];
 char tpic_pn[MAX_LEN];
 char tmp_buf[COMMON_SIZE];
 FILE *fp_in;
@@ -287,6 +293,8 @@ uint work(FILE *);
 uint s_work(FILE *);
 int strsubcmp(char *s, char *t);
 void sp_color(char *sp);
+void sp_pdf_bcolor(char *sp);
+void sp_pdf_ecolor(char *sp);
 void read_post(DVIFILE_INFO *dvi);
 uint interpret(FILE *);
 void make_page_index(DVIFILE_INFO *dvi, DIMENSION *dim);
@@ -374,7 +382,7 @@ void usage(void)
 	"       dvispc -s [-p..] input_dvi_file [output_text_file]\n"
 	"       dvispc -a [-jltv][-p..][-r..] input_dvi_file [output_text_file]\n"
 	"       dvispc -x[..] [-dltv][-r..] [input_text_file] output_dvi_file\n"
-	"   -c: make page-indepent DVI in specials for color push/pop, background, pn\n"
+	"   -c: make page-indepent DVI in specials (default)\n"
 	"   -d: check page-independence\n"
 	"   -b: backup original even if output_dvi_file is not given\n"
 	"   -s: show specials\n"
@@ -384,7 +392,11 @@ void usage(void)
 	"   -r: replace  (-rorg_1=new_1/org_2=new_2...  eg. -rxxx=special/fnt=font)\n"
 	"   -p: T:preamble  L:postamble  pages with - (eg: -pT-L  -pT2/4-8L  -p-4 etc.)\n"
 	"   -t: comaptible to DTL (the followings are suboptions if necessary eg. -t02)\n"
-	"       0:str 1:ch 2:ch2 3:cmd 4:c-sum 5:dir/name 6:err 7:page 8:oct 9:str0\n"
+	"       0:str 1:ch 2:ch2 3:cmd 4:c-sum 5:dir/name 6:err 7:page 8:oct 9:str0\n\n"
+	"Supported specials:\n"
+	"   color specials:  push, pop, background\n"
+	"   pdf specials  :  pdf:bcolor, pdf:ecolor, pdf:bgcolor\n"
+	"   tpic specials :  pn\n"
 	);
 	exit(1);
 }
@@ -747,17 +759,25 @@ lastpage:			if(isdigit(*++out_pages)){
 	for(page = 1; page <= dim->total_page; page++){
 		fseek(dvi->file_ptr, dim->page_index[page], SEEK_SET);
 		f_background = 0;
+		f_pdf_bgcolor = 0;
 		pos = interpret(dvi->file_ptr);				/* pos = position of EOP + 1 */
 		if(f_debug){
 			fprintf(fp_out, "[%d]", page);
 			if(page <= dim->total_page){
 				flag = color_depth;
+				flag += pdf_color_depth;
 				if(background[0] && !f_background){
 					fprintf(fp_out, "\n%s", background);
 					flag++;
 				}
+				if(pdf_bgcolor[0] && !f_pdf_bgcolor){
+					fprintf(fp_out, "\n%s", pdf_bgcolor);
+					flag++;
+				}
 				for(count = 0; count < color_depth; count++)
 					fprintf(fp_out, "\n%d:%s", count+1, color_pt[count]);
+				for(count = 0; count < pdf_color_depth; count++)
+					fprintf(fp_out, "\n%d:%s", count+1, pdf_color_pt[count]);
 				if(tpic_pn[0] && f_pn < 0){
 					fprintf(fp_out, "\n%s", tpic_pn);
 					flag++;
@@ -780,12 +800,20 @@ lastpage:			if(isdigit(*++out_pages)){
 			write_sp(fp, background);
 			f_color++;
 		}
+		if(pdf_bgcolor[0] && !f_pdf_bgcolor){				/* no pdf:bgcolor in this page */
+			write_sp(fp, pdf_bgcolor);
+			f_color++;
+		}
 		fseek(dvi->file_ptr, dim->page_index[page]+45, SEEK_SET);
 		for(size = pos - dim->page_index[page] - 46; size > 0; size--)
 			write_byte(read_byte(dvi->file_ptr), fp);	/* write contents of the current page */
 
 		for(count = 0; count < color_depth; count++){
 			write_sp(fp, "color pop");
+			f_color++;
+		}
+		for(count = 0; count < pdf_color_depth; count++){
+			write_sp(fp, "pdf:ecolor");
 			f_color++;
 		}
 		write_byte((uchar)EOP, fp);						/* write EOP */
@@ -799,17 +827,22 @@ lastpage:			if(isdigit(*++out_pages)){
 			write_long(former, fp);						/* position of BOP of the former page */
 			for(count = 0; count < color_depth; count++)
 				write_sp(fp, color_pt[count]);
+			for(count = 0; count < pdf_color_depth; count++)
+				write_sp(fp, pdf_color_pt[count]);
 			if(tpic_pn[0]){
 				write_sp(fp, tpic_pn);
 				f_color++;
 			}
 			f_color += color_depth;
+			f_color += pdf_color_depth;
 			if(tpic_pn[0])
 				f_color++;
 		}
 	}
 	if(f_debug && color_depth_max)
 		fprintf(fp_out, "\nMaximal depth of color stack:%d", color_depth_max);
+	if(f_debug && pdf_color_depth_max)
+		fprintf(fp_out, "\nMaximal depth of pdf:bcolor ... pdf:ecolor stack:%d", pdf_color_depth_max);
 	if(f_mode != EXE2INDEP){
 		fclose(dvi->file_ptr);
 		fprintf(fp_out, f_color?"\nSome corrections are necessary!\n":
@@ -1070,9 +1103,17 @@ skip:				  while (tmp--)
 								f_pn = -1;
 						else if(!strsubcmp(special, "color"))		/* color push/pop */
 							sp_color(special);
+						else if(!strsubcmp(special, "pdf:bcolor"))		/* pdf:bcolor */
+							sp_pdf_bcolor(special);
+						else if(!strsubcmp(special, "pdf:ecolor"))		/* pdf:ecolor */
+							sp_pdf_ecolor(special);
 						else if(!strsubcmp(special, "background")){	/* background */
 							strncpy(background, special, MAX_LEN);
 							f_background = 1;
+						}
+						else if(!strsubcmp(special, "pdf:bgcolor")){	/* pdf:bgcolor */
+							strncpy(pdf_bgcolor, special, MAX_LEN);
+							f_pdf_bgcolor = 1;
 						}
 				  	  	break;
 				  	  }
@@ -1116,6 +1157,45 @@ void sp_color(char *sp)
 		if(color_depth > color_depth_max)
 			color_depth_max = color_depth;
 	}
+}
+
+/*	pdf:bcolor special */
+void sp_pdf_bcolor(char *sp)
+{
+	char *s;
+
+	/* copied from "color push" routine of sp_color */
+	if(pdf_color_depth >= MAX_COLOR)
+		error("Too many pdf:bcolor > 512");
+	if(pdf_color_depth){
+		s = pdf_color_pt[pdf_color_depth-1];
+		s += strlen(s) + 1;
+	}
+	else
+		s = color_buf;
+	if(s - color_buf + strlen(sp) >= COLOR_BUF_SIZE - 2)
+		error("Too much color definitions");
+	else{
+		strcpy(s, sp);
+		pdf_color_pt[pdf_color_depth++] = s;
+	}
+	if(pdf_color_depth > pdf_color_depth_max)
+		pdf_color_depth_max = pdf_color_depth;
+}
+
+/*	pdf:ecolor special */
+void sp_pdf_ecolor(char *sp)
+{
+	char *s;
+
+	/* copied from "color pop" routine of sp_color */
+	if(--pdf_color_depth < 0){
+		fprintf(stderr, "pdf:bcolor ... pdf:ecolor stack underflow\n");
+		color_under++;
+		f_color++;
+		pdf_color_depth = 0;
+	}
+	return;
 }
 
 int num_add;
