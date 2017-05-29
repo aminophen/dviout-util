@@ -5,7 +5,7 @@
  *		Support the following specials
  *			color specials:  push, pop, background
  *			pdf specials  :  pdf:bcolor, pdf:ecolor, pdf:bgcolor
- *			tpic specials :  sh, pn
+ *			tpic specials :  sh, pn <= is "sh" really supported ??? (2017/05/29 HY)
  *
  *							Written by SHIMA
  *							  January 2003
@@ -242,9 +242,10 @@ char *out_pages ="T-L";
 
 int  color_depth;
 int  color_depth_max;
+int  color_under;
 int  pdf_color_depth;
 int  pdf_color_depth_max;
-int  color_under;
+int  pdf_color_under;
 int  f_color;
 char *color_pt[MAX_COLOR];
 char *pdf_color_pt[MAX_COLOR];
@@ -391,7 +392,7 @@ void usage(void)
 	"   -v: verbose       -j: Japanese characters       -l: location\n"
 	"   -r: replace  (-rorg_1=new_1/org_2=new_2...  eg. -rxxx=special/fnt=font)\n"
 	"   -p: T:preamble  L:postamble  pages with - (eg: -pT-L  -pT2/4-8L  -p-4 etc.)\n"
-	"   -t: comaptible to DTL (the followings are suboptions if necessary eg. -t02)\n"
+	"   -t: compatible to DTL (the followings are suboptions if necessary eg. -t02)\n"
 	"       0:str 1:ch 2:ch2 3:cmd 4:c-sum 5:dir/name 6:err 7:page 8:oct 9:str0\n\n"
 	"Supported specials:\n"
 	"   color specials:  push, pop, background\n"
@@ -796,6 +797,11 @@ lastpage:			if(isdigit(*++out_pages)){
 			f_color++;
 			color_under--;
 		}
+		while(pdf_color_under > 0){						/* recover underflow of pdf:bcolor ... pdf:ecolor stack */
+			write_sp(fp, "pdf:bcolor [0]");
+			f_color++;
+			pdf_color_under--;
+		}
 		if(background[0] && !f_background){				/* no background in this page */
 			write_sp(fp, background);
 			f_color++;
@@ -1103,9 +1109,9 @@ skip:				  while (tmp--)
 								f_pn = -1;
 						else if(!strsubcmp(special, "color"))		/* color push/pop */
 							sp_color(special);
-						else if(!strsubcmp(special, "pdf:bcolor"))		/* pdf:bcolor */
+						else if(!strsubcmp(special, "pdf:bcolor"))	/* pdf:bcolor */
 							sp_pdf_bcolor(special);
-						else if(!strsubcmp(special, "pdf:ecolor"))		/* pdf:ecolor */
+						else if(!strsubcmp(special, "pdf:ecolor"))	/* pdf:ecolor */
 							sp_pdf_ecolor(special);
 						else if(!strsubcmp(special, "background")){	/* background */
 							strncpy(background, special, MAX_LEN);
@@ -1191,7 +1197,7 @@ void sp_pdf_ecolor(char *sp)
 	/* copied from "color pop" routine of sp_color */
 	if(--pdf_color_depth < 0){
 		fprintf(stderr, "pdf:bcolor ... pdf:ecolor stack underflow\n");
-		color_under++;
+		pdf_color_under++;
 		f_color++;
 		pdf_color_depth = 0;
 	}
