@@ -3,7 +3,7 @@ package by Toshio OSHIMA, Yoshiki OTOBE, and Kazunori ASAYAMA.
 Here we just want dvispc, chkfont and propw. Small description:
 
 * chkfont.exe  : A utility to check font in DVI/TFM/JFM/FONT files
-* chkfont.txt  : Document of chkfont.exe
+* chkfont.txt  : Document of chkfont.exe (in Japanese)
 * dvispc.exe   : A utilty to correct the page-independence of DVI file using 
                  color specials or tpic specials and to transform between 
                  a DVI file and a text file
