@@ -231,6 +231,7 @@ int  f_sjis = 0;		/* -j */
 int  f_sjis = 1;
 #endif
 int  f_pos = 0;			/* position */
+int  f_book = 0;		/* multiple of four pages */
 
 int  f_background = 0;
 int  f_pdf_bgcolor = 0;
@@ -239,6 +240,7 @@ int  f_backup = 0;		/* output=input */
 int  f_ptex = 0;
 int  max_stack;
 char *out_pages ="T-L";
+int  total_book_page;
 
 int  color_depth;
 int  color_depth_max;
@@ -368,6 +370,22 @@ Long read_long(FILE *fp)
 	i  = read_byte(fp) << 24;
 	i += read_byte(fp) << 16;
 	i += read_byte(fp) << 8;
+	return i + read_byte(fp);
+}
+
+
+void write_word(int x, FILE *fp)
+{
+	write_byte((x >> 8) & 0xff, fp);
+	write_byte(x & 0xff, fp);
+}
+
+
+Long read_word(FILE *fp)
+{
+	int i;
+
+	i = read_byte(fp) << 8;
 	return i + read_byte(fp);
 }
 
@@ -503,6 +521,10 @@ error:					fprintf(stderr, "Error in parameter %s\n", argv[i]);
 
 			case 'l':
 				f_pos = 1;
+				break;
+
+			case 'z':
+				f_book = 1;
 				break;
 
 			default:
@@ -857,12 +879,42 @@ lastpage:			if(isdigit(*++out_pages)){
 		dvi->file_ptr = fp_out = NULL;
 		return;
 	}
+	/* if -z option is given, add empty pages to make multiple of 4 pages */
+	if(f_book){
+		total_book_page = dim->total_page + (4 - dim->total_page%4)%4;
+		if(dim->total_page < total_book_page){
+			for(page = dim->total_page; page < total_book_page; page++){
+				write_byte((uchar)BOP,fp);
+				write_long(-1, fp);
+				for (count = 1; count < 10; count++)	/* set all sub counts to 0 */
+					write_long(0, fp);
+				write_long(former, fp);
+				write_byte((uchar)EOP,fp);
+				former = current;
+				current = ftell(fp);		/* get position of BOP/POST */
+			}
+		}
+	}
 	write_byte((uchar)POST,fp);					/* write POST */
 	write_long(former, fp);						/* position of the last BOP */
 
 	fseek(dvi->file_ptr, dvi->post + 5, SEEK_SET);
-	for(size = dvi->pt_post - dvi->post - 5; size-- > 0; )
-		write_byte(read_byte(dvi->file_ptr), fp);	/* write postamble upto post_post */
+	if(f_book){
+		write_long(read_long(dvi->file_ptr), fp);		/* numerator */
+		write_long(read_long(dvi->file_ptr), fp);		/* denominator */
+		write_long(read_long(dvi->file_ptr), fp);		/* magnification */
+		write_long(read_long(dvi->file_ptr), fp);		/* tallest page height */
+		write_long(read_long(dvi->file_ptr), fp);		/* widest page width */
+		write_word(read_word(dvi->file_ptr), fp);		/* DVI stack size */
+		read_word(dvi->file_ptr);				/* skip original number of pages */
+		write_word(total_book_page, fp);			/* new number of pages */
+		for(size = dvi->pt_post - dvi->post - 29; size-- > 0; )
+			write_byte(read_byte(dvi->file_ptr), fp);	/* write postamble upto post_post */
+	}
+	else{
+		for(size = dvi->pt_post - dvi->post - 5; size-- > 0; )
+			write_byte(read_byte(dvi->file_ptr), fp);	/* write postamble upto post_post */
+	}
 	write_long(current, fp);					/* position of POST */
 	read_long(dvi->file_ptr);					/* skip old position of POST */
 	write_byte(read_byte(dvi->file_ptr), fp);	/* write id = 2/3 */
