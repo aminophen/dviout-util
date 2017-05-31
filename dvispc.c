@@ -880,19 +880,19 @@ lastpage:			if(isdigit(*++out_pages)){
 		return;
 	}
 	/* if -z option is given, add empty pages to make multiple of 4 pages */
+	if(f_book && dim->total_page%4 == 0)
+		f_book = 0; /* modification unnecessary */
 	if(f_book){
 		total_book_page = dim->total_page + (4 - dim->total_page%4)%4;
-		if(dim->total_page < total_book_page){
-			for(page = dim->total_page; page < total_book_page; page++){
-				write_byte((uchar)BOP,fp);
-				write_long(-1, fp);
-				for (count = 1; count < 10; count++)	/* set all sub counts to 0 */
-					write_long(0, fp);
-				write_long(former, fp);
-				write_byte((uchar)EOP,fp);
-				former = current;
-				current = ftell(fp);		/* get position of BOP/POST */
-			}
+		for(page = dim->total_page; page < total_book_page; page++){
+			write_byte((uchar)BOP,fp);
+			write_long(-1, fp);
+			for (count = 1; count < 10; count++)	/* set all sub counts to 0 */
+				write_long(0, fp);
+			write_long(former, fp);
+			write_byte((uchar)EOP,fp);
+			former = current;
+			current = ftell(fp);		/* get position of BOP/POST */
 		}
 	}
 	write_byte((uchar)POST,fp);					/* write POST */
@@ -927,7 +927,7 @@ lastpage:			if(isdigit(*++out_pages)){
 	fclose(fp);
 	fclose(dvi->file_ptr);
 	fp = dvi->file_ptr = NULL;
-	if(!f_color){
+	if(!f_color && !f_book){
 		unlink(outfile);
 		fprintf(stderr, "\nNo correction is done.\n");
 		return;
