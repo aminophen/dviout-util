@@ -1,12 +1,12 @@
 [2]       Modify a DVI file to be page-independent in specials
 [1]       Translation between  DVI file  <->  Text file
-                   Ver.0.2  written by SHIMA, Jan. 2003
+                   Ver.0.3  written by SHIMA, Jan. 2003
 
 Usage: dvispc [-c] [-bv] input_dvi_file [output_dvi_file]
        dvispc -d input_dvi_file
        dvispc -s [-p..] input_dvi_file [output_text_file]
        dvispc -a [-jltv][-p..][-r..] input_dvi_file [output_text_file]
-       dvispc -x[..] [-dltv][-r..] [input_text_file] output_dvi_file
+       dvispc -x[..] [-ltv][-r..] [input_text_file] output_dvi_file
    -c: make page-indepent DVI in specials for color push/pop, background, pn
    -d: check page-independence
    -b: backup original even if output_dvi_file is not given
@@ -20,6 +20,9 @@ Usage: dvispc [-c] [-bv] input_dvi_file [output_dvi_file]
        0:str 1:ch 2:ch2 3:cmd 4:c-sum 5:dir/name 6:err 7:page 8:oct 9:str0
    output_text_file : stdout if it is not specified.
    input_text_file  : stdin  if it is not specified.
+
+color specials: color push/pop, background
+tpic  specials: pn
 
 
          *****************************************************

@@ -4,8 +4,8 @@
  *		A program to modify DVI file to be page-independent
  *		Support the following specials
  *			color specials:  push, pop, background
- *			pdf specials  :  pdf:bcolor, pdf:ecolor, pdf:bgcolor
- *			tpic specials :  sh, pn <= is "sh" really supported ??? (2017/05/29 HY)
+ *			pdf   specials:  pdf:bcolor, pdf:ecolor, pdf:bgcolor
+ *			tpic  specials:  pn
  *
  *							Written by SHIMA
  *							  January 2003
@@ -400,7 +400,7 @@ void usage(void)
 	"       dvispc -d input_dvi_file\n"
 	"       dvispc -s [-p..] input_dvi_file [output_text_file]\n"
 	"       dvispc -a [-jltv][-p..][-r..] input_dvi_file [output_text_file]\n"
-	"       dvispc -x[..] [-dltv][-r..] [input_text_file] output_dvi_file\n"
+	"       dvispc -x[..] [-ltv][-r..] [input_text_file] output_dvi_file\n"
 	"   -c: make page-indepent DVI in specials (default)\n"
 	"   -d: check page-independence\n"
 	"   -b: backup original even if output_dvi_file is not given\n"
