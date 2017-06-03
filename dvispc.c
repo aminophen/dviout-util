@@ -768,11 +768,11 @@ lastpage:			if(isdigit(*++out_pages)){
 		return;
 	}		/* if(f_mode == EXE2TEXT || f_mode == EXE2SPECIAL) */
 
-	/* page independence in reverse order is also ensured */
+	/* This ensures page independence in reverse order too */
 	if(f_mode == EXE2INDEP || f_mode == EXE2CHECK){
 		for(page = 1; page <= dim->total_page; page++){
 			fseek(dvi->file_ptr, dim->page_index[page], SEEK_SET);
-			interpret(dvi->file_ptr);	/* Set f_background and f_pdf_bgcolor flags if necessary */
+			interpret(dvi->file_ptr);	/* Stock background[0] etc if exists */
 		}
 	}
 
