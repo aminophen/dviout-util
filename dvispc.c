@@ -766,10 +766,18 @@ lastpage:			if(isdigit(*++out_pages)){
 		fclose(fp_out);
 		dvi->file_ptr = fp_out = NULL;
 		return;
+	}		/* if(f_mode == EXE2TEXT || f_mode == EXE2SPECIAL) */
+
+	/* page independence in reverse order is also ensured */
+	if(f_mode == EXE2INDEP || f_mode == EXE2CHECK){
+		for(page = 1; page <= dim->total_page; page++){
+			fseek(dvi->file_ptr, dim->page_index[page], SEEK_SET);
+			interpret(dvi->file_ptr);	/* Set f_background and f_pdf_bgcolor flags if necessary */
+		}
 	}
 
 	former = current = -1;
-	if(fp){
+	if(fp){		/* f_mode == EXE2INDEP and can be opened */
 		fseek(dvi->file_ptr, 0, SEEK_SET);
 		for(size =  dim->page_index[1]; size > 0; size--)
 			write_byte(read_byte(dvi->file_ptr), fp);	/* Write preamble */
@@ -812,7 +820,7 @@ lastpage:			if(isdigit(*++out_pages)){
 			}
 		}
 		if(f_mode != EXE2INDEP)
-			continue;
+			continue;	/* skip loop if(f_mode == EXE2CHECK || f_mode == EXE2DVI) */
 
 		while(color_under > 0){							/* recover underflow of color stack */
 			write_sp(fp, "color push  Black");
@@ -879,6 +887,7 @@ lastpage:			if(isdigit(*++out_pages)){
 		dvi->file_ptr = fp_out = NULL;
 		return;
 	}
+
 	/* if -z option is given, add empty pages to make multiple of 4 pages */
 	if(f_book && dim->total_page%4 == 0)
 		f_book = 0; /* modification unnecessary */
@@ -900,6 +909,7 @@ lastpage:			if(isdigit(*++out_pages)){
 			current = ftell(fp);		/* get position of BOP/POST */
 		}
 	}
+
 	write_byte((uchar)POST,fp);					/* write POST */
 	write_long(former, fp);						/* position of the last BOP */
 
