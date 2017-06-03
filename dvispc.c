@@ -890,6 +890,11 @@ lastpage:			if(isdigit(*++out_pages)){
 			for (count = 1; count < 10; count++)	/* set all sub counts to 0 */
 				write_long(0, fp);
 			write_long(former, fp);
+			/* always white page */
+			if(background[0])	/* background is used somewhere */
+				write_sp(fp, "background gray 1");
+			if(pdf_bgcolor[0])	/* pdf:bgcolor is used somewhere */
+				write_sp(fp, "pdf:bgcolor [1]");
 			write_byte((uchar)EOP,fp);
 			former = current;
 			current = ftell(fp);		/* get position of BOP/POST */
