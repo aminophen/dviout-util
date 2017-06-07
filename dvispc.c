@@ -778,12 +778,12 @@ lastpage:			if(isdigit(*++out_pages)){
 	   without pre-scanning, so these are skipped due to f_prescan = 1.
 	   Other specials (background, pdf_bgcolor, pn) are handled in this scanning. */
 	if(f_mode == EXE2INDEP || f_mode == EXE2CHECK){
-		f_prescan = 1;
+		f_prescan = 1;	/* change behavior of interpret(dvi) */
 		for(page = 1; page <= dim->total_page; page++){
 			fseek(dvi->file_ptr, dim->page_index[page], SEEK_SET);
 			interpret(dvi->file_ptr);
 		}
-		f_prescan = 0;
+		f_prescan = 0;	/* restore interpret(dvi) */
 	}
 
 	former = current = -1;
@@ -1184,17 +1184,17 @@ skip:				  while (tmp--)
 							 !strsubcmp(special, "ar") ||			/* ar: draw circle */
 							 !strsubcmp(special, "ia")) )			/* ia: fill */
 								f_pn = -1;
-						else if(!strsubcmp(special, "color"))		/* color push/pop */
+						else if(!strsubcmp(special, "color") && !f_prescan)	/* color push/pop */
 							sp_color(special);
-						else if(!strsubcmp(special, "pdf:bcolor"))	/* pdf:bcolor */
+						else if(!strsubcmp(special, "pdf:bcolor") && !f_prescan)	/* pdf:bcolor */
 							sp_pdf_bcolor(special);
-						else if(!strsubcmp(special, "pdf:ecolor"))	/* pdf:ecolor */
+						else if(!strsubcmp(special, "pdf:ecolor") && !f_prescan)	/* pdf:ecolor */
 							sp_pdf_ecolor(special);
-						else if(!strsubcmp(special, "background")){	/* background */
+						else if(!strsubcmp(special, "background")){		/* background */
 							strncpy(background, special, MAX_LEN);
 							f_background = 1;
 						}
-						else if(!strsubcmp(special, "pdf:bgcolor")){	/* pdf:bgcolor */
+						else if(!strsubcmp(special, "pdf:bgcolor")){		/* pdf:bgcolor */
 							strncpy(pdf_bgcolor, special, MAX_LEN);
 							f_pdf_bgcolor = 1;
 						}
@@ -1213,7 +1213,6 @@ void sp_color(char *sp)
 {
 	char *s;
 
-	if(f_prescan) return;
 	if(strstr(sp, "pop")){
 		if(--color_depth < 0){
 			fprintf(stderr, "color stack underflow\n");
@@ -1249,7 +1248,6 @@ void sp_pdf_bcolor(char *sp)
 	char *s;
 
 	/* copied from "color push" routine of sp_color */
-	if(f_prescan) return;
 	if(pdf_color_depth >= MAX_COLOR)
 		error("Too many pdf:bcolor > 512");
 	if(pdf_color_depth){
@@ -1274,7 +1272,6 @@ void sp_pdf_ecolor(char *sp)
 	char *s;
 
 	/* copied from "color pop" routine of sp_color */
-	if(f_prescan) return;
 	if(--pdf_color_depth < 0){
 		fprintf(stderr, "pdf:bcolor ... pdf:ecolor stack underflow\n");
 		pdf_color_under++;
