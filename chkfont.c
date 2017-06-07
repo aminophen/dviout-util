@@ -160,7 +160,7 @@ char *newfont[] =
 };
 
 struct FONT_ATR {
-	/* font_defのパラメーター ; See "TeX:The program". */
+	/* parameters of font_def; See "TeX:The program". */
 	long k, c, s, d;
 	int a, l;
 	char *n;
@@ -623,7 +623,7 @@ void check_font(void)
 
 char *
     name_link(char *base, char *ext)
-	/* ベース名と，拡張子をくっつける．
+	/* combine basename and extension.
      */
 {
 	char *name;
@@ -638,7 +638,7 @@ char *
 }
 
 void read_post(DVIFILE_INFO *dvi)
-	/* POSTAMBLEからのデータ読み出し．
+	/* read data from POSTAMBLE.
      */
 {
 	long endofs;
