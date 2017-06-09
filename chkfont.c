@@ -312,10 +312,13 @@ void main(int argc, char **argv)
 			else{
 				if( strcmpl(pt, "tfm") == 0 ) f_t = 1;
 				else{
-					for(i = 0; font_ext[i]; i++){
-						if( strcmpl(pt, font_ext[i]) == 0 ){
-							f_t = 2;
-							break;
+					if( strcmpl(pt, "ofm") == 0 ) f_t = 1;
+					else{
+						for(i = 0; font_ext[i]; i++){
+							if( strcmpl(pt, font_ext[i]) == 0 ){
+								f_t = 2;
+								break;
+							}
 						}
 					}
 				}
@@ -733,9 +736,45 @@ void tfm_define(FILE * fp)
 	read_uint(fp);				/* lh */
 	bc = read_uint(fp);			/* bc */
 	ec = read_uint(fp);			/* ec */
-	if (bc < 0 || bc > 256 || bc > ec || ec > 256) {
-		printf("\n\"%s\" is not a tfm file\n", filename);
-		exit(254);
+	if (ec > 256) {
+		ch = 'o';
+	}
+	if (ch == 'o') {
+		/*
+		   [OFM format] current code assumes ofmlevel = 0
+		   Each entry is a 32-bit integer, non-negative and less than 2^31, and
+		     bc - 1 <= ec <= 65535
+		     lf = 14 + lh + 2 * (ec - bc + 1) + nw + nh + nd + ni + 2 * nl + nk + 2 * ne + np
+		*/
+		if (bc < 0 || bc > ec || ec > 65535) {
+			printf("\n\"%s\" is not a valid ofm file\n", filename);
+			exit(254);
+		}
+	}else {
+	if (ch == 'j') {
+		/*
+		   [JFM format]
+		   Each entry is a 16-bit integer, non-negative and less than 2^15, and
+		     bc = 0
+		     lf = 7 + lh + (ec - bc + 1) + nw + nh + nd + ni + nl + nk + ng + np
+		*/
+		if (bc != 0 || ec < 0 || ec > 255) {
+			printf("\n\"%s\" is not a valid jfm file\n", filename);
+			exit(254);
+		}
+	}else {
+		/*
+		   [JFM format]
+		   Each entry is a 16-bit integer, non-negative and less than 2^15, and
+		     bc - 1 <= ec <= 255
+		     ne <= 256
+		     lf = 6 + lh + (ec - bc + 1) + nw + nh + nd + ni + nl + nk + ne + np
+		*/
+		if (bc < 0 || bc > ec || ec > 255) {
+			printf("\n\"%s\" is not a valid tfm file\n", filename);
+			exit(254);
+		}
+	}
 	}
 	if (f_v != 0)
 		printf("\t\"%s\" is a %cfm%s file :%3d  -> %3d\n",
