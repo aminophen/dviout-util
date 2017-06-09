@@ -764,7 +764,7 @@ void tfm_define(FILE * fp)
 		}
 	}else {
 		/*
-		   [JFM format]
+		   [TFM format]
 		   Each entry is a 16-bit integer, non-negative and less than 2^15, and
 		     bc - 1 <= ec <= 255
 		     ne <= 256
