@@ -712,8 +712,10 @@ void get_font_list(DVIFILE_INFO *dvi)
 
 void tfm_define(FILE * fp)
 {
-	int i, ch, bc, ec;
-	long sum, size;
+	int i, ch, nt, ofmlevel;
+	long lf, lh, bc, ec, nw, nh, nd, ni, nl, nk, ne, np, fontdir, sum, size,
+	    headerlength, topchar, topwidth, topheight, topdepth, topitalic, ncw, nlw, neew,
+	    nco, npc, nki, nwi, nkf, nwf, nkm, nwm, nkr, nwr, nkg, nwg, nkp, nwp;
 	char *s, *t, *u;
 
 	font.n[strlen(font.n) - 4] = 0;
@@ -725,62 +727,157 @@ void tfm_define(FILE * fp)
 	font.a = t - s;
 	font.l = 0;
 
+	/* initialize for standard TFM */
 	ch = 't';
 	u = "";
+	nt = 0;
+	ofmlevel = 0;
+	headerlength = 6;
+	topchar = 255;
+	fontdir = 0;
+	nco = npc = nki = nwi = nkf = nwf = nkm = nwm = nkr = nwr = nkg = nwg = nkp = nwp = 0;
 
-	if ((i=read_uint(fp)) == 11 || i == 9) {	/* lf */
-		read_long(fp);
-		ch = 'j';
-		if( i == 9 ) u = "(tate)";
-	}
-	read_uint(fp);				/* lh */
-	bc = read_uint(fp);			/* bc */
-	ec = read_uint(fp);			/* ec */
-	if (ec > 256) {
+	if ((i=read_uint(fp)) == 0) {			/* (temporary) lf */
+		/* assume OFM */
 		ch = 'o';
+		ofmlevel = read_uint(fp);
+		if (ofmlevel == 0)
+			headerlength = 14;
+                else
+			headerlength = 29;
+		topchar = 1114111L;
+		lf = read_long(fp);			/* lf */
+		lh = read_long(fp);			/* lh */
 	}
+	else {
+		if (i == 11 || i == 9) {
+			/* assume JFM */
+			ch = 'j';
+			if( i == 9 ) u = "(tate)";
+			headerlength = 7;
+			nt = read_uint(fp);		/* nt */
+			lf = read_uint(fp);	       	/* lf */
+		}
+		else {
+			/* assume TFM */
+			lf = i;				/* lf */
+		}
+		lh = read_uint(fp);			/* lh */
+	}
+
+	/*
+	   [OFM format]
+	     Each entry is a 32-bit integer, non-negative and less than 2^31, and
+	       bc - 1 <= ec <= 1114111L  (cf. 65535 in texmf-dist/doc/omega/base/doc-1.8.tex)
+	       lf = 14 + lh + 2 * (ec - bc + 1) + nw + nh + nd + ni + 2 * nl + nk + 2 * ne + np
+	   [JFM format]
+	     Each entry is a 16-bit integer, non-negative and less than 2^15, and
+	       bc = 0
+	       lf = 7 + lh + (ec - bc + 1) + nw + nh + nd + ni + nl + nk + ng + np
+	   [TFM format]
+	     Each entry is a 16-bit integer, non-negative and less than 2^15, and
+	       bc - 1 <= ec <= 255
+	       ne <= 256
+	       lf = 6 + lh + (ec - bc + 1) + nw + nh + nd + ni + nl + nk + ne + np
+	*/
 	if (ch == 'o') {
-		/*
-		   [OFM format] current code assumes ofmlevel = 0
-		   Each entry is a 32-bit integer, non-negative and less than 2^31, and
-		     bc - 1 <= ec <= 65535
-		     lf = 14 + lh + 2 * (ec - bc + 1) + nw + nh + nd + ni + 2 * nl + nk + 2 * ne + np
-		*/
-		if (bc < 0 || bc > ec || ec > 65535) {
-			printf("\n\"%s\" is not a valid ofm file\n", filename);
-			exit(254);
-		}
-	}else {
+		bc = read_long(fp);			/* bc */
+		ec = read_long(fp);			/* ec */
+		nw = read_long(fp);
+		nh = read_long(fp);
+		nd = read_long(fp);
+		ni = read_long(fp);
+		nl = read_long(fp);
+		nk = read_long(fp);
+		ne = read_long(fp);
+		np = read_long(fp);
+		fontdir = read_long(fp);
+		nlw = 2 * nl;
+		neew = 2 * ne;
+		topchar = 1114111L;
+		topwidth = 1114111L;
+		topheight = 255;
+		topdepth = 255;
+		topitalic = 255;
+		if (ofmlevel == 0) {
+			ncw = 2 * ( ec - bc + 1 );
+                }
+                else {
+			nco = read_long(fp);
+			ncw = read_long(fp);
+			npc = read_long(fp);
+			nki = read_long(fp);
+			nwi = read_long(fp);
+			nkf = read_long(fp);
+			nwf = read_long(fp);
+			nkm = read_long(fp);
+			nwm = read_long(fp);
+			nkr = read_long(fp);
+			nwr = read_long(fp);
+			nkg = read_long(fp);
+			nwg = read_long(fp);
+			nkp = read_long(fp);
+			nwp = read_long(fp);
+                }
+	}
+	else {
+		bc = read_uint(fp);			/* bc */
+		ec = read_uint(fp);			/* ec */
+		nw = read_uint(fp);
+		nh = read_uint(fp);
+		nd = read_uint(fp);
+		ni = read_uint(fp);
+		nl = read_uint(fp);
+		nk = read_uint(fp);
+		ne = read_uint(fp);	/* for JFM, this corresponds to ng instead */
+		np = read_uint(fp);
+		ncw = ec - bc + 1;
+		nlw = nl;
+		neew = ne;
+		topwidth = 255;
+		topheight = 15;
+		topdepth = 15;
+		topitalic = 63;
+	}
 	if (ch == 'j') {
-		/*
-		   [JFM format]
-		   Each entry is a 16-bit integer, non-negative and less than 2^15, and
-		     bc = 0
-		     lf = 7 + lh + (ec - bc + 1) + nw + nh + nd + ni + nl + nk + ng + np
-		*/
-		if (bc != 0 || ec < 0 || ec > 255) {
-			printf("\n\"%s\" is not a valid jfm file\n", filename);
-			exit(254);
-		}
-	}else {
-		/*
-		   [TFM format]
-		   Each entry is a 16-bit integer, non-negative and less than 2^15, and
-		     bc - 1 <= ec <= 255
-		     ne <= 256
-		     lf = 6 + lh + (ec - bc + 1) + nw + nh + nd + ni + nl + nk + ne + np
-		*/
-		if (bc < 0 || bc > ec || ec > 255) {
-			printf("\n\"%s\" is not a valid tfm file\n", filename);
+		if (bc != 0 || ec < 0 || ec > topchar) {
+			printf("\nThe %cfm file \"%s\" has illegal character code range: %d -> %d\n", ch, filename, bc, ec);
 			exit(254);
 		}
 	}
+	else {
+		if (bc < 0 || bc > ec + 1 || ec > topchar) {
+			printf("\nThe %cfm file \"%s\" has illegal character code range: %d -> %d\n", ch, filename, bc, ec);
+			exit(254);
+		}
 	}
-	if (f_v != 0)
-		printf("\t\"%s\" is a %cfm%s file :%3d  -> %3d\n",
-			font.n, ch, u, bc, ec);
-	for (i = 0; i < 4; i++)
-		read_long(fp);
+	if (lf != (headerlength + nt + lh + ncw + nw + nh + nd + ni + nlw + nk + neew
+	    + np + nki + nwi + nkf + nwf + nkm + nwm + nkr + nwr + nkg + nwg + nkp + nwp)) {
+		printf("\n\"%s\" is not a valid tfm file\n", filename);
+		exit(254);
+	}
+#if 0
+	/* more strict check */
+	long ligsize = 800000L; /* set to 800000 for OFM, 32510 for TFM/JFM */
+	if (lh < 2)
+		printf("Warning: The header length is only %d!\n", lh);
+	if (nl > ligsize)
+		printf("Warning: The lig/kern program is too long!\n");
+	if (nw == 0 || nh == 0 || nd == 0 || ni == 0)
+		printf("Warning: Incomplete subfiles for character dimensions!");
+	if (ch != 'j' && ne > topchar + 1)
+		printf("Warning: There are %d extensible recipes!", ne);
+#endif
+
+	if (f_v != 0) {
+		if (ch == 'o')
+			printf("\t\"%s\" is a %cfm level %d file :%3d  -> %3d\n",
+				font.n, ch, ofmlevel, bc, ec);
+		else
+			printf("\t\"%s\" is a %cfm%s file :%3d  -> %3d\n",
+				font.n, ch, u, bc, ec);
+	}
+
 	font.c = read_long(fp);		/* header[0] */
 	font.d = read_long(fp);		/* header[1] */
 	fclose(fp);
