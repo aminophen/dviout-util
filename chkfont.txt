@@ -1,49 +1,54 @@
 1. chkfont.exe をパラメータをつけずに実行したときの画面は、以下の通りです。
 
-<<< CHecK dvi/tfm/gf/pk/pkd/pxl/gth/far file and tell informations of FONTs >>>
-                                Ver 1.6, written by SHIMA, 1990/1992
+	<<< CHecK dvi/tfm/font file and tell informations of FONTs >>>
+				Ver 1.7a, written by SHIMA, 1990/1992
 
 Usage: chkfont [-s] [-c] [-{f|F}<font_data_file>] [-d] dvi_file_name
        chkfont [-s] [-c] [-{f|F}<font_data_file>] [-t] tfm_file_name
        chkfont [-s] [-c] [-{f|F}<font_data_file>] [-p] font_file_name
 
-Option   -c: check mode
-         -s: silent check mode
-         -f: use font_data_file (-F: and ignore default data)
+Option	 -c: check mode
+	 -s: silent check mode
+	 -f: use font_data_file (-F: and ignore default data)
+	 -d: force DVI mode
+	 -t: force TFM/OFM mode
+	 -p: force FONT mode
+	     (supported formats: vf/ovf/gf/pk/pkd/pxl/gth/far)
+	 By default, mode is guessed from the file extension.
 
 Errorlevel is the sum of the following number
-          1: cmbsy5-9, cmcsc8-9, cmex7-9, cmmib5-9
-          2: new font: eu??, msam, msbm, wncy??, font_data_file
-          4: new eufm5-10
-          8: unknown eufm
-         16: old font: msxm, msym, amcsc, mcyr, mcyb, font_data_file
-         32: old eufm5-10
-
+	  1: cmbsy5-9, cmcsc8-9, cmex7-9, cmmib5-9
+	  2: new font: eu??, msam, msbm, wncy??, font_data_file
+	  4: new eufm5-10
+	  8: unknown eufm
+	 16: old font: msxm, msym, amcsc, mcyr, mcyb, font_data_file
+	 32: old eufm5-10
 If errorlevel is larger than 240,
-        248: error in font_data_file
-        249: cannot find font_data_file
-        250: bad parameter
-        251: old and new eufm
-        252: bad dvi file
-        253: error in dvi file
-        254: not dvi file
-        255: cannot find dvi/tfm file
+	248: error in font_data_file
+	249: cannot find font_data_file
+	250: bad parameter
+	251: old and new eufm
+	252: bad dvi file
+	253: error in dvi file
+	254: not dvi/tfm file or unknown font ID
+	255: cannot find dvi/tfm/font file
 
-                <<< Example of font_data_file >>>
-# font_name old_check_sum new_check_sum  (in HEX, 0 means check existence)
-eufm5   0891FD38        246A686B
-eufm10  BF989013        8F256EB2
+		<<< Example of font_data_file >>>
+# font_name old_check_sum new_check_sum  (in HEX, 0 means existence check)
+eufm5	0891FD38	246A686B
+eufm10	BF989013	8F256EB2
 # The line beginning with # or ; is ignored.
 
 
 
-2. chkfont.exe は、dvi file あるいは、tfm file および、gf file, pk file, pxl
-   file のフォントのデータをチェックするプログラムで、次の機能があります。
+2. chkfont.exe は、dvi file あるいは、tfm file および、vf file, gf file,
+   pk file, pxl file のフォントのデータをチェックするプログラムで、次の機能が
+   あります。
 
 　１． dvi file で使われているフォントを調べる。特にチェックサムを調べて、同じ
 　　　 フォント名でもバージョンが異なる場合のチェックを行う。
 
-　２． tfm/gf/pk/pxl file を調べて、チェックサムなどの情報を調べる。
+　２． tfm/vf/gf/pk/pxl file を調べて、チェックサムなどの情報を調べる。
 
 　３． チェックするチェックサムのデータは、データ・ファイルから読み込める。
 
@@ -155,7 +160,7 @@ Old eufm Old font
 
 
 
-2.3. tfm ファイルのデータを読みだすことができます。
+2.3. tfm/ofm ファイルのデータを読みだすことができます。
 　以下の実行例を参照してください。
   tfm_file_name は、拡張子をつけなければ、自動的に .tfm が補われます。
 
@@ -195,7 +200,7 @@ No AMS Font
 
 
 
-2.4. gf/pk/pkd/pxl/gth/far ファイルのデータを読みだすことができます。
+2.4. vf/ovf/gf/pk/pkd/pxl/gth/far ファイルのデータを読みだすことができます。
 　以下の実行例を参照してください。
 
 B>chkfont -c a:\tex\fonts\170dpi\eufm8.pk

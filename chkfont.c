@@ -6,9 +6,9 @@
  *						   Sep 1992, fifth  version
  *						   May 1996, sixth  version
  *
- * Usage: chkfont [-s] [-c] [-{f|F}<font_data_file>]    dvi_file_name\n"
- *        chkfont [-s] [-c] [-{f|F}<font_data_file>] -t tfm_file_name\n"
- *        chkfont [-s] [-c] [-{f|F}<font_data_file>] -p font_file_name\n\n"
+ * Usage: chkfont [-s] [-c] [-{f|F}<font_data_file>] [-d] dvi_file_name
+ *        chkfont [-s] [-c] [-{f|F}<font_data_file>] [-t] tfm_file_name
+ *        chkfont [-s] [-c] [-{f|F}<font_data_file>] [-p] font_file_name
  *
  * "c" means check mode
  * "s" means silent check mode
@@ -32,8 +32,8 @@
  *         251: old and new eufm
  *         252: bad dvi file
  *         253: error in dvi file
- *         254: not dvi file
- *         255: cannot find dvi file
+ *         254: not dvi/tfm file or unknown font ID
+ *         255: cannot find dvi/tfm/font file
  *
  *
  *  1 point = 65536(=2^(16)) scaled point
@@ -324,7 +324,7 @@ void main(int argc, char **argv)
 			else{
 				if( strcmpl(pt, "tfm") == 0 ||  strcmpl(pt, "ofm") == 0 ) f_t = 1;
 				else{
-					if( strcmpl(pt, "vf") == 0 ) f_t = 2;
+					if( strcmpl(pt, "vf") == 0 ) f_t = 2; /* ovf is also included */
 					else{
 						for(i = 0; font_ext[i]; i++){
 							if( strcmpl(pt, font_ext[i]) == 0 ){
@@ -1227,15 +1227,19 @@ void get_list(char *fname)
 void usage()
 {
 	fprintf(stderr,
-		"<<< CHecK dvi/tfm/gf/pk/pkd/pxl/gth/far file and tell informations"
-			" of FONTs >>>\n"
+		"\t<<< CHecK dvi/tfm/font file and tell informations of FONTs >>>\n"
 			"\t\t\t\tVer 1.7a, written by SHIMA, 1990/1992\n\n"
 	  "Usage: chkfont [-s] [-c] [-{f|F}<font_data_file>] [-d] dvi_file_name\n"
 	  "       chkfont [-s] [-c] [-{f|F}<font_data_file>] [-t] tfm_file_name\n"
 	"       chkfont [-s] [-c] [-{f|F}<font_data_file>] [-p] font_file_name\n\n"
 			"Option\t -c: check mode\n"
 			"\t -s: silent check mode\n"
-			"\t -f: use font_data_file (-F: and ignore default data)\n\n"
+			"\t -f: use font_data_file (-F: and ignore default data)\n"
+			"\t -d: force DVI mode\n"
+			"\t -t: force TFM/OFM mode\n"
+			"\t -p: force FONT mode\n"
+			"\t     (supported formats: vf/ovf/gf/pk/pkd/pxl/gth/far)\n"
+			"\t By default, mode is guessed from the file extension.\n\n"
 			"Input  M  to see more.  Push Return to quit");
 	switch (getc(stdin)) {
 	  case ('M'):
