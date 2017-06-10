@@ -743,7 +743,7 @@ void tfm_define(FILE * fp)
 		ofmlevel = read_uint(fp);
 		if (ofmlevel == 0)
 			headerlength = 14;
-                else
+		else
 			headerlength = 29;
 		topchar = 1114111L;
 		lf = read_long(fp);			/* lf */
@@ -756,7 +756,7 @@ void tfm_define(FILE * fp)
 			if( i == 9 ) u = "(tate)";
 			headerlength = 7;
 			nt = read_uint(fp);		/* nt */
-			lf = read_uint(fp);	       	/* lf */
+			lf = read_uint(fp);		/* lf */
 		}
 		else {
 			/* assume TFM */
@@ -805,8 +805,8 @@ void tfm_define(FILE * fp)
 		topitalic = 255;
 		if (ofmlevel == 0) {
 			ncw = 2 * ( ec - bc + 1 );
-                }
-                else {
+		}
+		else {
 			nco = read_long(fp);
 			ncw = read_long(fp);
 			npc = read_long(fp);
@@ -822,7 +822,7 @@ void tfm_define(FILE * fp)
 			nwg = read_long(fp);
 			nkp = read_long(fp);
 			nwp = read_long(fp);
-                }
+		}
 	}
 	else {
 		bc = read_uint(fp);			/* bc */
