@@ -769,11 +769,15 @@ void tfm_define(FILE * fp)
 	   [OFM format]
 	     Each entry is a 32-bit integer, non-negative and less than 2^31, and
 	       bc - 1 <= ec <= 1114111L  (cf. 65535 in texmf-dist/doc/omega/base/doc-1.8.tex)
-	       lf = 14 + lh + 2 * (ec - bc + 1) + nw + nh + nd + ni + 2 * nl + nk + 2 * ne + np
+	       lf = 14 + lh + 2 * (ec - bc + 1) + nw + nh + nd + ni + 2 * nl + nk + 2 * ne + np  (for level 0)
+	       lf = 29 + lh +               ncw + nw + nh + nd + ni + 2 * nl + nk + 2 * ne + np
+	            + nki + nwi + nkf + nwf + nkm + nwm + nkr + nwr + nkg + nwg + nkp + nwp      (for level 1)
+	       nki + nkf + nkm + nkr + nkg + nkp < 32  (for level 1)
 	   [JFM format]
 	     Each entry is a 16-bit integer, non-negative and less than 2^15, and
+	       0 <= ec <= 255
 	       bc = 0
-	       lf = 7 + lh + (ec - bc + 1) + nw + nh + nd + ni + nl + nk + ng + np
+	       lf = 7 + nt + lh + (ec - bc + 1) + nw + nh + nd + ni + nl + nk + ng + np
 	   [TFM format]
 	     Each entry is a 16-bit integer, non-negative and less than 2^15, and
 	       bc - 1 <= ec <= 255
