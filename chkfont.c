@@ -843,6 +843,11 @@ void tfm_define(FILE * fp)
 		topdepth = 15;
 		topitalic = 63;
 	}
+	if (lf != (headerlength + nt + lh + ncw + nw + nh + nd + ni + nlw + nk + neew
+	    + np + nki + nwi + nkf + nwf + nkm + nwm + nkr + nwr + nkg + nwg + nkp + nwp)) {
+		printf("\n\"%s\" is not a %cfm file\n", filename, ch);
+		exit(254);
+	}
 	if (ch == 'j') {
 		if (bc != 0 || ec < 0 || ec > topchar) {
 			printf("\nThe %cfm file \"%s\" has illegal character code range: %d -> %d\n", ch, filename, bc, ec);
@@ -854,11 +859,6 @@ void tfm_define(FILE * fp)
 			printf("\nThe %cfm file \"%s\" has illegal character code range: %d -> %d\n", ch, filename, bc, ec);
 			exit(254);
 		}
-	}
-	if (lf != (headerlength + nt + lh + ncw + nw + nh + nd + ni + nlw + nk + neew
-	    + np + nki + nwi + nkf + nwf + nkm + nwm + nkr + nwr + nkg + nwg + nkp + nwp)) {
-		printf("\n\"%s\" is not a valid tfm file\n", filename);
-		exit(254);
 	}
 #if 0
 	/* more strict check */
