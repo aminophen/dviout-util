@@ -1536,9 +1536,9 @@ last:		k = oct(label);
 end:
 	if(f_jfm > 0 && f_pl){
 		fclose(fo);
-		sprintf(buf, "pltotf %s", outfile);
+		sprintf(buf, "ppltotf %s", outfile);
 		outfile[f_jfm] = 0;
-		fprintf(fe, "--- Translating %s.pl to %s.tfm by pltotf ---\n",
+		fprintf(fe, "--- Translating %s.pl to %s.tfm by ppltotf ---\n",
 			outfile, outfile);
 		strcpy(outfile+f_jfm, ".tfm");
 		unlink(outfile);
@@ -1548,7 +1548,7 @@ end:
 			strcpy(outfile+f_jfm, ".pl");
 			unlink(outfile);
 			outfile[f_jfm] = 0;
-			fprintf(fe, "--- tftopl %s  (<- the command to make the PL file) ---\n\n", outfile);
+			fprintf(fe, "--- ptftopl %s  (<- the command to make the PL file) ---\n\n", outfile);
 		}
 		outfile[0] = 0;
 	}

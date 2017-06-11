@@ -18,7 +18,7 @@ Windowsにインストールされている各種和文TrueTypeフォントに対応した jfm ファイルを
   cd texmf\fonts\tfm\windows\wabun
   propw <directory_of_pttfonts.map>\pttfonts.map
 
-とします（このとき、propw.exe や pltotf.exe にパスが通しておく必要があります）。
+とします（このとき、propw.exe や ppltotf.exe にパスが通しておく必要があります）。
 pttfonts.map には、JFM ファイル名（TeX で参照されるフォント名）とWinodwsで参照
 されるファイル名との対応表が書かれていますが、新たに自由に追加することができま
 す。
@@ -42,7 +42,7 @@ msptgoth        : @ＭＳ Ｐゴシック（縦書プロポーショナル）
 
         propw -o=foo.pl "#@ＭＳ Ｐ明朝"
 
-   次に 5. のようにして、pltotf で jfm ファイルに変換すればよい。
+   次に 5. のようにして、ppltotf で jfm ファイルに変換すればよい。
 
    あるいは、dviout を使って、以下のようにしても PL ファイルが作成できる。
 
@@ -67,7 +67,7 @@ msptgoth        : @ＭＳ Ｐゴシック（縦書プロポーショナル）
 
 5. 必要なら、foo.pl の中身を適当に編集した後
 
-       pltotf foo.pl
+       ppltotf foo.pl
 
    を実行すると、対応する jfm ファイル foo.tfm が作成される。
 
@@ -122,7 +122,7 @@ Example: propw -o=msptmin.pl "-fm=MS P MINCHOU" "#@ＭＳ Ｐ明朝"
 
   としても同じである。
 
-  pltotf にパスが通っていれば、直接 JFM ファイルを作成することができる（出力
+  ppltotf にパスが通っていれば、直接 JFM ファイルを作成することができる（出力
   ファイルの拡張子が .tfm となることから判断される）。
 
      propw "-fm=JIS KANJI" -p -o=jis.tfm null.txt
@@ -173,13 +173,13 @@ Example: propw -o=msptmin.pl "-fm=MS P MINCHOU" "#@ＭＳ Ｐ明朝"
 
       propw mspmin.log > mspmin.pl
 
-  PL ファイルから JFM ファイルを作成するには、pltotf が使われる。すなわち
+  PL ファイルから JFM ファイルを作成するには、ppltotf が使われる。すなわち
 
-      pltotf mspmin.pl
+      ppltotf mspmin.pl
 
   とすると、mspmin.tfm が作成される。
 
-  pltopl にパスが通っていれば、propw の出力ファイルの拡張子が .tfm となって
+  ppltotf にパスが通っていれば、propw の出力ファイルの拡張子が .tfm となって
   いると、直接 JFM ファイルが生成される。たとえば
 
       propw -o=mspmin.tfm "-fm=JIS P KANJI" "#ＭＳ Ｐ明朝"
@@ -191,7 +191,7 @@ Example: propw -o=msptmin.pl "-fm=MS P MINCHOU" "#@ＭＳ Ｐ明朝"
 -t: 縦書き（TrueTypeの漢字フォント名が指定されていれば、自動判断されるので、
     指定は不要）
 
--r: JIS code が16進で 7426 以上のものも扱う（現時点での pltotf p1.4 でこれがあ
+-r: JIS code が16進で 7426 以上のものも扱う（現時点での ppltotf p1.4 でこれがあ
     ると、エラーとなる）
 
 -q: ZW（tfm width:全角幅）の設定に併せて、ZH(depth+height)を等しくした正方形の
@@ -238,7 +238,7 @@ Example: propw -o=msptmin.pl "-fm=MS P MINCHOU" "#@ＭＳ Ｐ明朝"
   .pl1, .pl2, .tfm の場合は、それぞれ 1. 2. 4. の形式のファイルが出力される。
   （ただし、0. から出発した場合は、4. の形式のファイルが出力される）。出力され
 　たファイルの拡張子が .pl1 .pl2 のものは propw によって、 pl のファイルは 
-  pltotf によって JFM ファイルに変換できる。1. 2. 3. のファイルは、直接編集し
+  ppltotf によって JFM ファイルに変換できる。1. 2. 3. のファイルは、直接編集し
   て調整を行うことができる。
 
 <file> : パラメータや、文字の幅と文字のテーブルのデータファイル
