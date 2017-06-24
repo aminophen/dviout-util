@@ -533,7 +533,7 @@ void check_font(void)
 			  printf("\n\n\tMapped Font %ld\n", vffont.k);
 			//  printf("\t\tchecksum\t= %08lX\n", vffont.c); /* always zero, we can't get it without tfm */
 			  printf("\t\tfont dsize\t= %ld 2^{-20} points = %ld points", vffont.d, vffont.d/(1<<20));
-			  printf("\n\t\tfont at\t\t= %8.0lf 2^{-20} points = %9.6lf points", vffont.s, vffont.s/(1<<20));
+			  printf("\n\t\tfont at\t\t= %9.6lf", vffont.s/(1<<20));
 			  printf("\n\t\tfont name\t= %s", vffont.n);
 			  break;
 
