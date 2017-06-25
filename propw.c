@@ -126,6 +126,7 @@ FILE *fe; // = stderr;
 
 int option(char *para);
 void HeaderOut(FILE *fh, int mode);
+void Exit(int code);
 
 void msg(void)
 {
@@ -165,7 +166,7 @@ void msg(void)
 	"Example: propw -o=msptmin.pl \"-fm=MS P MINCHOU\" \"#@‚l‚r ‚o–¾’©\"\n"
 #endif
 	);
-	exit(1);
+	Exit(1);
 }
 
 void Exit(int code)
@@ -500,8 +501,8 @@ void ReadMap(FILE *fp)
 		*s = 0;
 		if((f_para & 1) != 0){
 			fh = fopen("$.par", "w");
-			if(fo == NULL){
-				fprintf(stderr, "Cannot open parameter file $.par");
+			if(fh == NULL){
+				fprintf(stderr, "Cannot open parameter file $.par\n");
 				exit(1);
 			}
 			HeaderOut(fh, 0);
@@ -607,12 +608,12 @@ rep:
 #endif
 
 		case 'x':
-            if(*para > ' ')
+			if(*para > ' ')
 				goto er;
 			if(f_para >= 2)
 				unlink("$.par");
 			fputs(para, stderr);
-			exit( 2 );
+			goto rep;
 
 		case 'F':
 			if(!strncmp(para, "ONT: ", 5)){
