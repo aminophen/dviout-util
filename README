@@ -14,3 +14,16 @@ Here we just want dvispc, chkfont and propw. Small description:
 
 These files are licensed under the Expat license.
 -- Hironobu Yamashita, May 2017
+
+All files in this repository are encoded in CP932 (LF), as in tug.org
+subversion repository.
+If you like to compile these files on Unix system, convert encodings
+by executing following commands:
+  $ iconv -f CP932 -t UTF-8 propw.c >propw.c.utf8
+  $ mv propw.c.utf8 propw.c
+If you like to distribute these files (especially .txt documents) on
+Windows, it might be better to convert LF to CRLF (CP932 should be kept):
+  $ nkf -Ss -Lw --overwrite propw0.txt
+The LF -> CRLF conversion is suggested in tug.org subversion repository,
+under trunk/distribution/ directory.
+-- Hironobu Yamashita, July 2017
