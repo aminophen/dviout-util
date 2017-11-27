@@ -195,6 +195,8 @@ struct DIMENSION_REC {
 #define	MAX_LEN			128
 #define	MAX_COLOR		512
 #define	COLOR_BUF_SIZE	MAX_COLOR*32
+#define	MAX_ANNOT		8
+#define	ANNOT_BUF_SIZE	MAX_ANNOT*512
 #define	COMMON_SIZE		0x4000
 #define	MAX_FONT		256
 
@@ -233,9 +235,6 @@ int  f_sjis = 1;
 int  f_pos = 0;			/* position */
 int  f_book = 0;		/* multiple of four pages */
 
-int  f_background = 0;
-int  f_pdf_bgcolor = 0;
-int  f_pn = 0;
 int  f_backup = 0;		/* output=input */
 int  f_ptex = 0;
 int  f_prescan = 0;
@@ -243,19 +242,32 @@ int  max_stack;
 char *out_pages ="T-L";
 int  total_book_page;
 
+/* stack specials */
 int  color_depth;
 int  color_depth_max;
 int  color_under;
+char *color_pt[MAX_COLOR];
 int  pdf_color_depth;
 int  pdf_color_depth_max;
 int  pdf_color_under;
-int  f_color;
-char *color_pt[MAX_COLOR];
 char *pdf_color_pt[MAX_COLOR];
-char color_buf[COLOR_BUF_SIZE];
+int  pdf_annot_depth;
+int  pdf_annot_depth_max;
+int  pdf_annot_under;
+char *pdf_annot_pt[MAX_ANNOT];
+
+/* non-stack specials */
+int  f_background = 0;
 char background[MAX_LEN];
+int  f_pdf_bgcolor = 0;
 char pdf_bgcolor[MAX_LEN];
+int  f_pn = 0;
 char tpic_pn[MAX_LEN];
+
+int  f_needs_corr; /* flag to determine if correction is needed */
+char color_buf[COLOR_BUF_SIZE]; /* common buffer for color/pdf_color */
+char annot_buf[ANNOT_BUF_SIZE];
+
 char tmp_buf[COMMON_SIZE];
 FILE *fp_in;
 FILE *fp_out;
@@ -296,9 +308,12 @@ const int AdID = (('A'<<24)+('d'<<16)+('O'<<8)+EOP);
 uint work(FILE *);
 uint s_work(FILE *);
 int strsubcmp(char *s, char *t);
+int strsubcmp_n(char *s, char *t);
 void sp_color(char *sp);
 void sp_pdf_bcolor(char *sp);
 void sp_pdf_ecolor(char *sp);
+void sp_pdf_bann(char *sp);
+void sp_pdf_eann(char *sp);
 void read_post(DVIFILE_INFO *dvi);
 uint interpret(FILE *);
 void make_page_index(DVIFILE_INFO *dvi, DIMENSION *dim);
@@ -719,7 +734,8 @@ void translate(DVIFILE_INFO *dvi, DIMENSION *dim)
 		}
 	}else
 		fp = NULL;
-	f_color = flag = 0;
+
+	f_needs_corr = flag = 0;
 
  	if(f_mode == EXE2TEXT || f_mode == EXE2SPECIAL){
 		while(out_pages && *out_pages){
@@ -807,6 +823,7 @@ lastpage:			if(isdigit(*++out_pages)){
 			if(page <= dim->total_page){
 				flag = color_depth;
 				flag += pdf_color_depth;
+				flag += pdf_annot_depth;
 				if(background[0] && !f_background){
 					fprintf(fp_out, "\n%s", background);
 					flag++;
@@ -819,13 +836,15 @@ lastpage:			if(isdigit(*++out_pages)){
 					fprintf(fp_out, "\n%d:%s", count+1, color_pt[count]);
 				for(count = 0; count < pdf_color_depth; count++)
 					fprintf(fp_out, "\n%d:%s", count+1, pdf_color_pt[count]);
+				for(count = 0; count < pdf_annot_depth; count++)
+					fprintf(fp_out, "\n%d:%s", count+1, pdf_annot_pt[count]);
 				if(tpic_pn[0] && f_pn < 0){
 					fprintf(fp_out, "\n%s", tpic_pn);
 					flag++;
 				}
 				if(flag){
 					fprintf(fp_out, "\n");
-					f_color++;
+					f_needs_corr++;
 				}
 			}
 		}
@@ -834,21 +853,26 @@ lastpage:			if(isdigit(*++out_pages)){
 
 		while(color_under > 0){							/* recover underflow of color stack */
 			write_sp(fp, "color push  Black");
-			f_color++;
+			f_needs_corr++;
 			color_under--;
 		}
 		while(pdf_color_under > 0){						/* recover underflow of pdf:bcolor ... pdf:ecolor stack */
 			write_sp(fp, "pdf:bcolor [0]");
-			f_color++;
+			f_needs_corr++;
 			pdf_color_under--;
 		}
 		if(background[0] && !f_background){				/* no background in this page */
 			write_sp(fp, background);
-			f_color++;
+			f_needs_corr++;
 		}
 		if(pdf_bgcolor[0] && !f_pdf_bgcolor){				/* no pdf:bgcolor in this page */
 			write_sp(fp, pdf_bgcolor);
-			f_color++;
+			f_needs_corr++;
+		}
+		while(pdf_annot_under > 0){						/* recover underflow of pdf:bann ... pdf:eann stack */
+			/* [TODO] what should we do here? */
+			f_needs_corr++;
+			pdf_annot_under--;
 		}
 		fseek(dvi->file_ptr, dim->page_index[page]+45, SEEK_SET);
 		for(size = pos - dim->page_index[page] - 46; size > 0; size--)
@@ -856,11 +880,15 @@ lastpage:			if(isdigit(*++out_pages)){
 
 		for(count = 0; count < color_depth; count++){
 			write_sp(fp, "color pop");
-			f_color++;
+			f_needs_corr++;
 		}
 		for(count = 0; count < pdf_color_depth; count++){
 			write_sp(fp, "pdf:ecolor");
-			f_color++;
+			f_needs_corr++;
+		}
+		for(count = 0; count < pdf_annot_depth; count++){
+			write_sp(fp, "pdf:eann");
+			f_needs_corr++;
 		}
 		write_byte((uchar)EOP, fp);						/* write EOP */
 		former = current;
@@ -875,23 +903,29 @@ lastpage:			if(isdigit(*++out_pages)){
 				write_sp(fp, color_pt[count]);
 			for(count = 0; count < pdf_color_depth; count++)
 				write_sp(fp, pdf_color_pt[count]);
+			for(count = 0; count < pdf_annot_depth; count++)
+				write_sp(fp, pdf_annot_pt[count]);
 			if(tpic_pn[0]){
 				write_sp(fp, tpic_pn);
-				f_color++;
+				f_needs_corr++;
 			}
-			f_color += color_depth;
-			f_color += pdf_color_depth;
+			f_needs_corr += color_depth;
+			f_needs_corr += pdf_color_depth;
+			f_needs_corr += pdf_annot_depth;
 			if(tpic_pn[0])
-				f_color++;
+				f_needs_corr++;
 		}
 	}
 	if(f_debug && color_depth_max)
 		fprintf(fp_out, "\nMaximal depth of color stack:%d", color_depth_max);
 	if(f_debug && pdf_color_depth_max)
 		fprintf(fp_out, "\nMaximal depth of pdf:bcolor ... pdf:ecolor stack:%d", pdf_color_depth_max);
+	if(f_debug && pdf_annot_depth_max)
+		fprintf(fp_out, "\nMaximal depth of pdf:bann ... pdf:eann stack:%d", pdf_annot_depth_max);
 	if(f_mode != EXE2INDEP){
 		fclose(dvi->file_ptr);
-		fprintf(fp_out, f_color?"\nSome corrections are necessary!\n":
+		fprintf(fp_out, f_needs_corr?
+			"\nSome corrections are necessary!\n":
 			"\nNo modification is necessary\n");
 		fclose(fp_out);
 		dvi->file_ptr = fp_out = NULL;
@@ -952,7 +986,7 @@ lastpage:			if(isdigit(*++out_pages)){
 	fclose(fp);
 	fclose(dvi->file_ptr);
 	fp = dvi->file_ptr = NULL;
-	if(!f_color && !f_book){
+	if(!f_needs_corr && !f_book){
 		unlink(outfile);
 		fprintf(stderr, "\nNo correction is done.\n");
 		return;
@@ -1119,6 +1153,17 @@ int strsubcmp(char *s, char *t)
 	return(!*t && (uchar)(*s) <= ' ')?0:1;
 }
 
+/* without space separator (e.g. pdf:bann<<...>>, instead of pdf:bann <<...>>) */
+int strsubcmp_n(char *s, char *t)
+{
+	while(*s == *t){
+		if(!*t)
+			return 0;
+		s++;
+		t++;
+	}
+	return(!*t)?0:1;
+}
 
 uint s_work(FILE *dvi)
 {
@@ -1198,6 +1243,10 @@ skip:				  while (tmp--)
 							strncpy(pdf_bgcolor, special, MAX_LEN);
 							f_pdf_bgcolor = 1;
 						}
+						else if(!strsubcmp_n(special, "pdf:bann") && !f_prescan)	/* pdf:bann */
+							sp_pdf_bann(special);
+						else if(!strsubcmp(special, "pdf:eann") && !f_prescan)	/* pdf:eann */
+							sp_pdf_eann(special);
 				  	  	break;
 				  	  }
 				  	  goto skip;
@@ -1217,7 +1266,7 @@ void sp_color(char *sp)
 		if(--color_depth < 0){
 			fprintf(stderr, "color stack underflow\n");
 			color_under++;
-			f_color++;
+			f_needs_corr++;
 			color_depth = 0;
 		}
 		return;
@@ -1275,8 +1324,43 @@ void sp_pdf_ecolor(char *sp)
 	if(--pdf_color_depth < 0){
 		fprintf(stderr, "pdf:bcolor ... pdf:ecolor stack underflow\n");
 		pdf_color_under++;
-		f_color++;
+		f_needs_corr++;
 		pdf_color_depth = 0;
+	}
+	return;
+}
+
+/*	pdf:bann special */
+void sp_pdf_bann(char *sp)
+{
+	char *s;
+	if(pdf_annot_depth >= MAX_ANNOT)
+		error("Too many pdf:bann > 8");
+	if(pdf_annot_depth){
+		s = pdf_annot_pt[pdf_annot_depth-1];
+		s += strlen(s) + 1;
+	}
+	else
+		s = annot_buf;
+	if(s - annot_buf + strlen(sp) >= ANNOT_BUF_SIZE - 2)
+		error("Too much annot definitions");
+	else{
+		strcpy(s, sp);
+		pdf_annot_pt[pdf_annot_depth++] = s;
+	}
+	if(pdf_annot_depth > pdf_annot_depth_max)
+		pdf_annot_depth_max = pdf_annot_depth;
+}
+
+/*	pdf:eann special */
+void sp_pdf_eann(char *sp)
+{
+	char *s;
+	if(--pdf_annot_depth < 0){
+		fprintf(stderr, "pdf:bann ... pdf:eann stack underflow\n");
+		pdf_annot_under++;
+		f_needs_corr++;
+		pdf_annot_depth = 0;
 	}
 	return;
 }
