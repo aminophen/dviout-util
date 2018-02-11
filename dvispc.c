@@ -11,13 +11,14 @@
  *							  January 2003
  */
 
-/*
-				Validitate in case of UNIX
+#ifdef __GNUC__
+/* Validitate in case of UNIX */
 #define	UNIX	1
-*/
-
-/*				Validitate if SHIFT JIS is used for a filename  */
+#else
+/* Validitate if SHIFT JIS is used for a filename */
+/* Win32 MSVC is assumed */
 #define	SHIFT_JIS	1
+#endif
 
 /*					%%% Contents of an extended DVI file  %%%
  *  PRE(247)
