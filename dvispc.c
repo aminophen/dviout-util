@@ -7,7 +7,7 @@
  *			pdf   specials:  pdf:bcolor, pdf:ecolor, pdf:bgcolor
  *			tpic  specials:  pn
  *
- *							Written by SHIMA
+ *						Originally written by SHIMA
  *							  January 2003
  */
 
@@ -92,6 +92,12 @@
 #include <fcntl.h>
 #endif
 
+#include <config.h>
+#ifdef	PTEXENC
+#include <ptexenc/ptexenc.h>
+#include <ptexenc/unicode.h>
+#endif
+
 #define	uchar	unsigned char
 #define	uint	unsigned int
 #define	Long	int
@@ -101,7 +107,7 @@
 #define	READ_TEXT		"r"
 #define	READ_BINARY		"r"
 #define	WRITE_BINARY	"w"
-#define WRITE_TEXT		"r"
+#define	WRITE_TEXT		"w"
 #define	StrCmp	strcmp
 #else
 #define	PATH_SEP		'\\'
@@ -228,10 +234,14 @@ int  f_mode = EXE2INDEP;	/*  0: -c page_indep
 
 int	 f_debug = 0;		/* -v */
 int	 f_overwrite = 0;	/* -b */
+#ifdef	PTEXENC
+int  f_jstr = 0;		/* -J */
+#else
 #ifdef	UNIX
 int  f_sjis = 0;		/* -j */
 #else
 int  f_sjis = 1;
+#endif
 #endif
 int  f_pos = 0;			/* position */
 int  f_book = 0;		/* multiple of four pages */
@@ -412,11 +422,17 @@ void usage(void)
 	fprintf(stderr,
 	"\t  Modify a DVI file to be page-independent in specials\n"
 	"\t  Translation between  DVI file  <->  Text file\n"
-	"\t           Ver.0.3  written by SHIMA, Jan. 2003\n\n"
+	"\t         Originally written by SHIMA, Jan. 2003\n"
+	"\t         Ver.%s (%s)\n\n", VERSION, TL_VERSION);
+	fprintf(stderr,
 	"Usage: dvispc [-c] [-bvz] input_dvi_file [output_dvi_file]\n"
 	"       dvispc -d input_dvi_file\n"
 	"       dvispc -s [-p..] input_dvi_file [output_text_file]\n"
+#ifdef	PTEXENC
+	"       dvispc -a [-ltv][-J..][-p..][-r..] input_dvi_file [output_text_file]\n"
+#else
 	"       dvispc -a [-jltv][-p..][-r..] input_dvi_file [output_text_file]\n"
+#endif
 	"       dvispc -x[..] [-ltv][-r..] [input_text_file] output_dvi_file\n"
 	"   -c: make page-indepent DVI in specials (default)\n"
 	"   -d: check page-independence\n"
@@ -424,12 +440,20 @@ void usage(void)
 	"   -s: show specials\n"
 	"   -a: translate DVI to Text\n"
 	"   -x: translate Text to DVI (-x0:str0 1:chkfnt 2:variety)\n"
+#ifdef	PTEXENC
+	"   -v: verbose       -l: location\n"
+#else
 	"   -v: verbose       -j: Japanese characters       -l: location\n"
+#endif
 	"   -z: append empty pages if necessary to have multiple of 4 pages for book\n"
 	"   -r: replace  (-rorg_1=new_1/org_2=new_2...  eg. -rxxx=special/fnt=font)\n"
 	"   -p: T:preamble  L:postamble  pages with - (eg: -pT-L  -pT2/4-8L  -p-4 etc.)\n"
 	"   -t: compatible to DTL (the followings are suboptions if necessary eg. -t02)\n"
 	"       0:str 1:ch 2:ch2 3:cmd 4:c-sum 5:dir/name 6:err 7:page 8:oct 9:str0\n"
+#ifdef	PTEXENC
+	"   -J: set Japanese characters output with a suboption:\n"
+	"       e:EUC-JP s:Shift_JIS u:UTF-8 for pTeX  or  U:UTF-8 for upTeX.\n"
+#endif
 	"   output_text_file : stdout if it is not specified.\n"
 	"   input_text_file  : stdin  if it is not specified.\n\n"
 	"Supported specials:\n"
@@ -483,9 +507,30 @@ int main(int argc, char **argv)
 				f_backup = 1;
 				break;
 
+#ifdef	PTEXENC
+			case 'J':
+				f_jstr = 1;
+				switch(argv[i][len+1]){
+					case 'e':
+						set_enc_string ("euc",  "default"); break;
+					case 's':
+						set_enc_string ("sjis", "default"); break;
+					case 'u':
+						set_enc_string ("utf8", "default"); break;
+					case 'U':
+						enable_UPTEX(true);
+						set_enc_string ("utf8", "uptex"); break;
+					default:
+						fprintf(stderr, "Unknown option:%s\n", argv[i]);
+						exit(1);
+				}
+				len++;
+				break;
+#else
 			case 'j':
 				f_sjis = 1 - f_sjis;
 				break;
+#endif
 
 			case 'p':
 				s = out_pages = argv[i]+len+1;
@@ -534,7 +579,9 @@ error:					fprintf(stderr, "Error in parameter %s\n", argv[i]);
 						f_dtl ^= (1 << (ch - '0'));
 					len--;
 				}else{
+#ifndef	PTEXENC
 					f_sjis = 1-f_sjis;
+#endif
 					f_dtl = 0x00ffffff;
 				}
 				break;
@@ -1705,6 +1752,11 @@ uint work(FILE *dvi)
 	int code, mode, h_code, l_code, tmp = 0;
 	long pos = 0;
 	uint csum;
+#ifdef	PTEXENC
+	int imb;
+	long wch;
+	char mbstr[4];
+#endif
 
 	while( (code = (uchar)read_byte(dvi)) != EOP && code != POST_POST){
 		if(f_pos)
@@ -1752,6 +1804,22 @@ uint work(FILE *dvi)
 				}
 				if(mode > 0x30){
 					code = read_n(dvi, mode & 0xf);
+#ifdef	PTEXENC
+					if(f_jstr){
+						wch = fromDVI(code);
+						if (is_internalUPTEX()) wch = UCStoUTF8(wch);
+						imb = 0;  memset(mbstr, '\0', 4);
+						if (BYTE1(wch) != 0) mbstr[imb++]=BYTE1(wch);
+						if (BYTE2(wch) != 0) mbstr[imb++]=BYTE2(wch);
+						if (BYTE3(wch) != 0) mbstr[imb++]=BYTE3(wch);
+						/* always */         mbstr[imb++]=BYTE4(wch);
+						fprintf(fp_out,
+							(f_dtl&DTL_CHAR2)?" %u \"":" 0x%x \"", code);
+						fputs2(mbstr, fp_out);
+						fprintf(fp_out, "\"\n");
+						continue;
+					}
+#else
 					if(f_sjis){
 						l_code = code & 0xff;
 						h_code = code >> 8;
@@ -1768,6 +1836,7 @@ uint work(FILE *dvi)
 							continue;
 						}
 					}
+#endif
 					fprintf(fp_out, (f_dtl&DTL_CHAR2)?" %u\n":" 0x%x\n", code);
 				}else
 					fprintf(fp_out, " %d\n", signed_read_n(dvi, mode & 0xf));
