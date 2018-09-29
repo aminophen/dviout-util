@@ -12,10 +12,10 @@
  */
 
 #ifdef __GNUC__
-/* Validitate in case of UNIX */
+/* Validate in case of UNIX */
 #define	UNIX	1
 #else
-/* Validitate if SHIFT JIS is used for a filename */
+/* Validate if SHIFT JIS is used for a filename */
 /* Win32 MSVC is assumed */
 #define	SHIFT_JIS	1
 #endif
