@@ -232,8 +232,10 @@ int  f_mode = EXE2INDEP;	/*  0: -c page_indep
 								3: -a to_Text
 								4: -x to_DVI 	*/
 
-int	 f_debug = 0;		/* -v */
-int	 f_overwrite = 0;	/* -b */
+int  f_debug = 0;		/* -v */
+int  f_overwrite = 0;
+int  f_backup = 0;		/* -b */
+
 #ifdef	PTEXENC
 int  f_jstr = 0;		/* -J */
 #else
@@ -246,7 +248,6 @@ int  f_sjis = 1;
 int  f_pos = 0;			/* position */
 int  f_book = 0;		/* multiple of four pages */
 
-int  f_backup = 0;		/* output=input */
 int  f_ptex = 0;
 int  f_prescan = 0;
 int  max_stack;
@@ -304,9 +305,11 @@ char font_use[MAX_FONT];
 
 const int AdID = (('A'<<24)+('d'<<16)+('O'<<8)+EOP);
 
-#define	issjis1(c) ((c)>=0x81&&(c)<=0xfc&&((c)<=0x9f||(c)>=0xe0))
-#define issjis2(c) ((c)>=0x40 && (c)<=0xfc && (c)!=0x7f)
+#ifndef	PTEXENC
+// #define issjis1(c) ((c)>=0x81&&(c)<=0xfc&&((c)<=0x9f||(c)>=0xe0))
+// #define issjis2(c) ((c)>=0x40 && (c)<=0xfc && (c)!=0x7f)
 #define isjis(c) (((c)>=0x21 && (c)<=0x7e))
+#endif
 #define is_hex(c)   ((c>='0'&&c<='9')||(c>='a'&&c<='f')||(c>='A'&&c<='F'))
 #define is_oct(c)   (c>='0'&&c<='7')
 // #define is_dig(c)   (c>='0'&&c<='9')
@@ -433,21 +436,23 @@ void usage(void)
 #else
 	"       dvispc -a [-jltv][-p..][-r..] input_dvi_file [output_text_file]\n"
 #endif
-	"       dvispc -x[..] [-ltv][-r..] [input_text_file] output_dvi_file\n"
+	"       dvispc -x[..] [-ltv][-r..] [input_text_file] output_dvi_file\n\n"
+	"Mode options:\n"
 	"   -c: make page-indepent DVI in specials (default)\n"
 	"   -d: check page-independence\n"
-	"   -b: backup original even if output_dvi_file is not given\n"
 	"   -s: show specials\n"
 	"   -a: translate DVI to Text\n"
-	"   -x: translate Text to DVI (-x0:str0 1:chkfnt 2:variety)\n"
+	"   -x: translate Text to DVI (-x0:str0 1:chkfnt 2:variety)\n\n"
+	"Other options:\n"
 #ifdef	PTEXENC
 	"   -v: verbose       -l: location\n"
 #else
 	"   -v: verbose       -j: Japanese characters       -l: location\n"
 #endif
+	"   -b: backup original even if output_dvi_file is not given\n"
 	"   -z: append empty pages if necessary to have multiple of 4 pages for book\n"
-	"   -r: replace  (-rorg_1=new_1/org_2=new_2...  eg. -rxxx=special/fnt=font)\n"
 	"   -p: T:preamble  L:postamble  pages with - (eg: -pT-L  -pT2/4-8L  -p-4 etc.)\n"
+	"   -r: replace  (-rorg_1=new_1/org_2=new_2...  eg. -rxxx=special/fnt=font)\n"
 	"   -t: compatible to DTL (the followings are suboptions if necessary eg. -t02)\n"
 	"       0:str 1:ch 2:ch2 3:cmd 4:c-sum 5:dir/name 6:err 7:page 8:oct 9:str0\n"
 #ifdef	PTEXENC
@@ -747,6 +752,8 @@ same:		strcpy(outfile, infile);
 				fprintf(stderr, "Cannot open %s\n", outfile);
 				exit(1);
 			}
+		} else {
+			fp_out = stderr;
 		}
 	}
 	read_post(&dvi_info);
@@ -775,7 +782,6 @@ void translate(DVIFILE_INFO *dvi, DIMENSION *dim)
 	FILE *fp;
 
 	if(f_mode == EXE2INDEP){
-		f_debug = 0;
 		fp = (*outfile)?fopen(outfile, WRITE_BINARY):fp_out;
 		if(fp == NULL){
 			fprintf(stderr, "Cannot open %s\n", outfile);
@@ -965,12 +971,14 @@ lastpage:			if(isdigit(*++out_pages)){
 				f_needs_corr++;
 		}
 	}
-	if(f_debug && color_depth_max)
-		fprintf(fp_out, "\nMaximal depth of color stack:%d", color_depth_max);
-	if(f_debug && pdf_color_depth_max)
-		fprintf(fp_out, "\nMaximal depth of pdf:bcolor ... pdf:ecolor stack:%d", pdf_color_depth_max);
-	if(f_debug && pdf_annot_depth_max)
-		fprintf(fp_out, "\nMaximal depth of pdf:bann ... pdf:eann stack:%d", pdf_annot_depth_max);
+	if(f_debug) {
+		if(color_depth_max)
+			fprintf(fp_out, "\nMaximal depth of color stack:%d", color_depth_max);
+		if(pdf_color_depth_max)
+			fprintf(fp_out, "\nMaximal depth of pdf:bcolor ... pdf:ecolor stack:%d", pdf_color_depth_max);
+		if(pdf_annot_depth_max)
+			fprintf(fp_out, "\nMaximal depth of pdf:bann ... pdf:eann stack:%d", pdf_annot_depth_max);
+	}
 	if(f_mode != EXE2INDEP){
 		fclose(dvi->file_ptr);
 		fprintf(fp_out, f_needs_corr?
@@ -1043,7 +1051,7 @@ lastpage:			if(isdigit(*++out_pages)){
 	if(f_overwrite){
 		if(f_backup){
 			sprintf(tmp_buf, "%s.bak", infile);
-			if(unlink(tmp_buf) == -1 || rename(infile, tmp_buf) == -1){
+			if(rename(infile, tmp_buf) == -1){
 				fprintf(stderr, "Cannot backup %s to %s\n", infile, tmp_buf);
 				Exit(1);
 			}
@@ -1672,6 +1680,7 @@ void flush_str(void)
 	len = 0;
 }
 
+#ifndef	PTEXENC
 #ifndef	UNIX
 void jis2sjis(int *h, int *l)
 {
@@ -1682,6 +1691,7 @@ void jis2sjis(int *h, int *l)
 	if (*h < 0x5f)		*h = (*h + 0xe1) >> 1;
 		else			*h = (*h + 0x161) >> 1;
 }
+#endif
 #endif
 
 void out_string(FILE *in, FILE *out, int len)
@@ -1750,13 +1760,15 @@ void transpost(FILE *dvi)
 /* content of a page */
 uint work(FILE *dvi)
 {
-	int code, mode, h_code, l_code, tmp = 0;
+	int code, mode, tmp = 0;
 	long pos = 0;
 	uint csum;
 #ifdef	PTEXENC
 	int imb;
 	long wch;
 	char mbstr[4];
+#else
+	int h_code, l_code;
 #endif
 
 	while( (code = (uchar)read_byte(dvi)) != EOP && code != POST_POST){
@@ -2099,7 +2111,7 @@ uchar *get_next(unsigned char *pt)
 uint a2i(unsigned char *s)
 {
 	uint num;
-/* strtol(s, &pt, 0)  will be oveflow for unsigned */
+/* strtol(s, &pt, 0)  will overflow for unsigned */
 
 	if(!*s)
 		return 0;
