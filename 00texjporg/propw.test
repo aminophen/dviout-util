@@ -5,10 +5,8 @@
 
 testdir=$srcdir/tests
 
-rc=0
-
 echo | ./propw "-fm=JIS TEST" -p > xjistest.pl && \
-  diff $testdir/jistest.pl xjistest.pl && echo || rc=1
+  diff $testdir/jistest.pl xjistest.pl && echo || exit 1
 
-exit $rc
+exit 0
 
