@@ -2,7 +2,7 @@
 # backport from TL tree (texjporg/tex-jp-build) -> standalone repo
 
 # without encoding conversion
-for x in 00texjporg/{README,COPYING,ChangeLog,*.test}; do \
+for x in 00texjporg/{README,COPYING,ChangeLog,*.man,*.test}; do \
 	cp "$x" "./${x##*/}"; \
 done
 

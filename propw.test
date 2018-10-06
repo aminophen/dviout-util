@@ -3,11 +3,12 @@
 # Copyright (C) 2018 Japanese TeX Development Community <issue@texjp.org>
 # You may freely use, modify and/or distribute this file.
 
-test_src=$srcdir/tests
+testdir=$srcdir/tests
 
 rc=0
 
-echo | ./propw "-fm=JIS TEST" -p > jistest.pl && diff $test_src/jistest.pl jistest.pl || rc=1
+echo | ./propw "-fm=JIS TEST" -p > xjistest.pl && \
+  diff $testdir/jistest.pl xjistest.pl && echo || rc=1
 
 exit $rc
 
