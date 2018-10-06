@@ -17,7 +17,7 @@ chkdvifont_SOURCES = chkdvifont.c dd.h msvcdir.h
 LDADD = $(KPATHSEA_LIBS)
 dvispc_LDADD = $(PTEXENC_LIBS) $(LDADD)
 
-#dist_man1_MANS =
+dist_man1_MANS = dvispc.man chkdvifont.man
 
 ## Rebuild libkpathsea
 @KPATHSEA_RULE@
@@ -35,13 +35,13 @@ EXTRA_DIST = $(TESTS)
 EXTRA_DIST += \
 	tests/test.tex tests/test.dvi tests/test.spc \
 	tests/testout.dvi
-DISTCLEANFILES = test.spc testout.dvi
+DISTCLEANFILES = xtest.spc xtestout.dvi xtesta.txt xtestax.dvi
 
 ## propw.test
 EXTRA_DIST += tests/jistest.pl
-DISTCLEANFILES += jistest.pl
+DISTCLEANFILES += xjistest.pl
 
 ## chkdvifont.test
 EXTRA_DIST += tests/test.cfn
-DISTCLEANFILES += test.cfn
+DISTCLEANFILES += test.dvi xtest.cfn
 
