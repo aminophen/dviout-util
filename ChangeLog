@@ -1,3 +1,7 @@
+2018-10-07  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* chkdvifont.c: Checksum should be read as unsigned.
+
 2018-10-06  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
 
 	* dvispc.c: Change option handling for future extensions.
