@@ -5,6 +5,7 @@
 for x in 00texjporg/{README,COPYING,ChangeLog,*.man,*.test}; do \
 	cp "$x" "./${x##*/}"; \
 done
+cp 00texjporg/tests/* tests/
 
 # with encoding conversion
 # GNU iconv can be used to convert UTF-8 -> CP932

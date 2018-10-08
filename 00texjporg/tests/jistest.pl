@@ -50,19 +50,19 @@
    (STOP)
    )
 (CHARSINTYPE O 1
-   â€˜ â€œ ï¼ˆ ã€” ï¼» ï½› ã€ˆ ã€Š ã€Œ ã€Ž ã€ 
+   e g i k m o q s u w y 
    )
 (CHARSINTYPE O 2
-   ã€ ï¼Œ â€™ â€ ï¼‰ ã€• ï¼½ ï½ ã€‰ ã€‹ ã€ ã€ ã€‘ 
+   A C f h j l n p r t v x z 
    )
 (CHARSINTYPE O 3
-   ãƒ» ï¼š ï¼› 
+   E F G 
    )
 (CHARSINTYPE O 4
-   ã€‚ ï¼Ž 
+   B D 
    )
 (CHARSINTYPE O 5
-   â€• â€¦ â€¥ 
+   \ c d 
    )
 (TYPE O 0
    (CHARWD R 0.962216)

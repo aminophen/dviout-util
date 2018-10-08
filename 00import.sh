@@ -2,7 +2,7 @@
 # import from standalone repo -> TL tree (texjporg/tex-jp-build)
 
 # without encoding conversion
-for x in {README,COPYING,ChangeLog,*.man,*.test}; do \
+for x in {README,COPYING,ChangeLog,*.man,*.test,tests/*}; do \
 	cp "$x" "00texjporg/$x"; \
 done
 
