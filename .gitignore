@@ -1,3 +1,5 @@
+*~
+*.exe
 tests/*.aux
 tests/*.log
 tests/*.out

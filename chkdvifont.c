@@ -1288,6 +1288,6 @@ void usage()
 			"eufm10	BF989013	8F256EB2\n"
 			"# The line beginning with # or ; is ignored.\n"
 		);
-	exit(250);
+	exit(0);
 }
 
