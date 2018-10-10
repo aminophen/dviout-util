@@ -1102,7 +1102,7 @@ lastpage:           if(isdigit(*++out_pages)){
         }
         fprintf(stderr, "\nDVI file %s is corrected\n", infile);
     }else
-        fprintf(stderr, "\nCreate a new DVI file %s\n", outfile);
+        fprintf(stderr, "\nCreate a new DVI file %s\n", (*outfile)?outfile:"(stdout)");
 }
 
 

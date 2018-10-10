@@ -3,6 +3,7 @@
 	* dvispc.c: Clean up code, more comments. Mostly revert
 	the change on 2018-10-06, "Change option handling for
 	future extensions" and change EXE2INDEP -> EXE2MODIFY.
+	Make sure outfile string is non-empty.
 	* dvispc.test: Test pipe input/output.
 	* chkdvifont.man, dvispc.man: More info.
 
