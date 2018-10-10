@@ -879,21 +879,21 @@ lastpage:           if(isdigit(*++out_pages)){
         fclose(fp_out);
         dvi->file_ptr = fp_out = NULL;
         return;
-    } /* if(f_mode == EXE2TEXT || f_mode == EXE2SPECIAL) */
+    } /* done for if(f_mode == EXE2TEXT || f_mode == EXE2SPECIAL),
+         the rest of translate() is meant for
+         if((f_mode & EXE2INDEP) and (f_mode == EXE2CHECK)) */
 
     /* Prior scanning. This ensures page independence in reverse order too,
        by checking whether non-stack specials appears somewhere in DVI.
        Specials with paired syntax (push/pop, bcolor/ecolor) are already safe
        without pre-scanning, so these are skipped due to f_prescan = 1.
        Other specials (background, pdf_bgcolor, pn) are handled in this scanning. */
-    if((f_mode & EXE2INDEP) || f_mode == EXE2CHECK){
-        f_prescan = 1;  /* change behavior of interpret(dvi) */
-        for(page = 1; page <= dim->total_page; page++){
-            fseek(dvi->file_ptr, dim->page_index[page], SEEK_SET);
-            interpret(dvi->file_ptr);
-        }
-        f_prescan = 0;  /* restore interpret(dvi) */
+    f_prescan = 1;  /* change behavior of interpret(dvi) */
+    for(page = 1; page <= dim->total_page; page++){
+        fseek(dvi->file_ptr, dim->page_index[page], SEEK_SET);
+        interpret(dvi->file_ptr);
     }
+    f_prescan = 0;  /* restore interpret(dvi) */
 
     former = current = -1;
     if(fp){  /* ((f_mode & EXE2INDEP)) and can be opened */
@@ -907,7 +907,7 @@ lastpage:           if(isdigit(*++out_pages)){
         write_long(former, fp);                         /* ptr to the former page = -1 */
     }
 
-    for(page = 1; page <= dim->total_page; page++){
+    for(page = 1; page <= dim->total_page; page++){ /* page loop start */
         fseek(dvi->file_ptr, dim->page_index[page], SEEK_SET);
         f_background = 0;
         f_pdf_bgcolor = 0;
@@ -944,7 +944,7 @@ lastpage:           if(isdigit(*++out_pages)){
         }
         if(f_mode == EXE2CHECK)
             continue;  /* skip loop if (f_mode == EXE2CHECK);
-                        * remainings are for (f_mode & EXE2INDEP) */
+                        * remainings in this loop are for (f_mode & EXE2INDEP) */
 
         /* [Process 2] at the beginning of each page,
            recover from stack underflow, and put non-stack specials if necessary */
@@ -995,8 +995,8 @@ lastpage:           if(isdigit(*++out_pages)){
         former = current;
         current = ftell(fp);        /* get position of BOP/POST */
 
-        /* [Process 5] start the next page,
-           with passing not-yet-closed stacks */
+        /* [Process 5] except for the last page,
+           start the next page with passing not-yet-closed stacks */
         if(page < dim->total_page){
             fseek(dvi->file_ptr, dim->page_index[page+1], SEEK_SET);
             for(size = 41; size > 0; size--)  /* write BOP and c[] */
@@ -1018,7 +1018,8 @@ lastpage:           if(isdigit(*++out_pages)){
             if(tpic_pn[0])
                 f_needs_corr++;
         }
-    }
+    } /* page loop end */
+
     if(f_debug) {
         if(color_depth_max)
             fprintf(fp_out, "\nMaximal depth of color stack:%d", color_depth_max);
@@ -1027,7 +1028,7 @@ lastpage:           if(isdigit(*++out_pages)){
         if(pdf_annot_depth_max)
             fprintf(fp_out, "\nMaximal depth of pdf:bann ... pdf:eann stack:%d", pdf_annot_depth_max);
     }
-    if(!(f_mode & EXE2INDEP)){
+    if(f_mode == EXE2CHECK){
         fclose(dvi->file_ptr);
         fprintf(fp_out, f_needs_corr?
             "\nSome corrections are necessary!\n":
@@ -1035,7 +1036,7 @@ lastpage:           if(isdigit(*++out_pages)){
         fclose(fp_out);
         dvi->file_ptr = fp_out = NULL;
         return;
-    }
+    } /* done for EXE2CHECK; remainings are for EXE2INDEP */
 
     /* if -z option is given, add empty pages to make multiple of 4 pages */
     if(f_book && dim->total_page%4 == 0)

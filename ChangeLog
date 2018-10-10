@@ -1,5 +1,6 @@
 2018-10-10  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
 
+	* dvispc.c: Clean up code, more comments.
 	* dvispc.test: Test pipe input/output.
 	* chkdvifont.man, dvispc.man: More info.
 
