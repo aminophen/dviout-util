@@ -1102,7 +1102,7 @@ lastpage:           if(isdigit(*++out_pages)){
         }
         fprintf(stderr, "\nDVI file %s is corrected\n", infile);
     }else
-        fprintf(stderr, "\nCreate a new DVI file %s\n", (*outfile)?outfile:"(stdout)");
+        fprintf(stderr, "\nCreate a new DVI file %s\n", (fp_out==stdout)?"(stdout)":outfile);
 }
 
 
@@ -2584,7 +2584,7 @@ err:            fprintf(stderr, "Error(line %d, code %d): %s\n", line, code, tmp
     }
     num = ftell(fp_out);
     fprintf(stderr, "Write %d byte (%d page): %s\n", num, page,
-        (fp_out==stdout)?"":outfile);
+        (fp_out==stdout)?"(stdout)":outfile);
     fclose(fp_in);
     fclose(fp_out);
     fp_in = fp_out = NULL;
