@@ -221,10 +221,10 @@ struct DIMENSION_REC {
 int f_dtl = 0;
 
 enum {
-    EXE2NONE, EXE2INDEP, EXE2CHECK, EXE2SPECIAL, EXE2TEXT, EXE2DVI
+    EXE2NONE, EXE2MODIFY, EXE2CHECK, EXE2SPECIAL, EXE2TEXT, EXE2DVI
 };
 
-int  f_mode = EXE2NONE; /*  1: -c page_indep
+int  f_mode = EXE2NONE; /*  1: -c modify
                             2: -d report only
                             3: -s specials
                             4: -a to_Text
@@ -482,7 +482,7 @@ int main(int argc, char **argv)
       for(len = 1; argv[i][len]; len++){
         switch(argv[i][len]){
             case 'c':
-                f_mode = EXE2INDEP;
+                f_mode = EXE2MODIFY;
                 break;
 
             case 's':
@@ -610,7 +610,7 @@ skip: ;
        cf.  argc = (number of all arguments) + 1
         {argv[0] is the program name itself} ^^^ */
 
-    if(!f_mode) f_mode = EXE2INDEP; /* default mode */
+    if(!f_mode) f_mode = EXE2MODIFY; /* default mode */
 
     fnum = 0;
     if(!isatty(fileno(stdin))){  /* if stdin is redirected from a file */
@@ -635,7 +635,7 @@ skip: ;
             if(fp_out == NULL){
                 /* outfile not given, free stdout;
                    binary cannot be written, text is fine */
-                if(f_mode == EXE2INDEP || f_mode == EXE2DVI)
+                if(f_mode == EXE2MODIFY || f_mode == EXE2DVI)
                     usage(1);
                 fp_out = stdout;
             }
@@ -654,7 +654,7 @@ skip: ;
                 /* outfile not given;
                    nonetheless binary should be written to a file,
                    text is fine with free stdout */
-                if(f_mode == EXE2INDEP)
+                if(f_mode == EXE2MODIFY)
                     strcpy(outfile, argv[argc-1]);
                 else
                     fp_out = stdout;
@@ -664,7 +664,7 @@ skip: ;
                    otherwise, redirected stdout
                     -> the only argument = infile
                        if fnum == 2, non-empty stdin will be discarded but don't care!
-                       (output to overwrite for EXE2INDEP, stdout for others) */
+                       (output to overwrite for EXE2MODIFY, stdout for others) */
                 strcpy((fp_out == NULL)?outfile:infile, argv[argc-1]);
             break;
 
@@ -680,7 +680,7 @@ skip: ;
             usage(1);
     }
 #ifndef UNIX
-    if(fp_out && !*outfile && (f_mode == EXE2DVI || f_mode == EXE2INDEP))
+    if(fp_out && !*outfile && (f_mode == EXE2DVI || f_mode == EXE2MODIFY))
         setmode( fileno( stdout ), O_BINARY);
 #endif
     if(fp_in && !*infile && f_mode != EXE2DVI){
@@ -727,7 +727,7 @@ skip: ;
 
     /* [TODO] comments not added yet */
     if(argc - i == 1){
-        if(f_mode == EXE2INDEP && !fnum){
+        if(f_mode == EXE2MODIFY && !fnum){
 #ifdef UNIX
             static char tmpfile[] = "/tmp/dvispcXXXXXX";
             int fd;
@@ -773,7 +773,7 @@ same:       strcpy(outfile, infile);
     if(fp_out == NULL || *outfile){
         if(!*outfile)
             fp_out = (f_mode == EXE2TEXT || f_mode == EXE2SPECIAL)?stdout:stderr;
-        else if(f_mode == EXE2INDEP)
+        else if(f_mode == EXE2MODIFY)
             fp_out = stderr;
         else{
             fp_out = fopen(outfile, WRITE_TEXT);
@@ -808,7 +808,7 @@ void translate(DVIFILE_INFO *dvi, DIMENSION *dim)
     int page, page2, pos, count, size, former, current, flag;
     FILE *fp;
 
-    if(f_mode == EXE2INDEP){
+    if(f_mode == EXE2MODIFY){
         fp = (*outfile)?fopen(outfile, WRITE_BINARY):fp_out;
         if(fp == NULL){
             fprintf(stderr, "Cannot open %s\n", outfile);
@@ -871,7 +871,7 @@ lastpage:           if(isdigit(*++out_pages)){
         return;
     } /* done for if(f_mode == EXE2TEXT || f_mode == EXE2SPECIAL),
          the rest of translate() is meant for
-         if((f_mode == EXE2INDEP) and (f_mode == EXE2CHECK)) */
+         if((f_mode == EXE2MODIFY) and (f_mode == EXE2CHECK)) */
 
     /* Prior scanning. This ensures page independence in reverse order too,
        by checking whether non-stack specials appears somewhere in DVI.
@@ -886,7 +886,7 @@ lastpage:           if(isdigit(*++out_pages)){
     f_prescan = 0;  /* restore interpret(dvi) */
 
     former = current = -1;
-    if(fp){  /* f_mode == EXE2INDEP and can be opened */
+    if(fp){  /* f_mode == EXE2MODIFY and can be opened */
         fseek(dvi->file_ptr, 0, SEEK_SET);
         for(size =  dim->page_index[1]; size > 0; size--)
             write_byte(read_byte(dvi->file_ptr), fp);   /* Write preamble */
@@ -934,7 +934,7 @@ lastpage:           if(isdigit(*++out_pages)){
         }
         if(f_mode == EXE2CHECK)
             continue;  /* skip loop if (f_mode == EXE2CHECK);
-                        * remainings in this loop are for (f_mode == EXE2INDEP) */
+                        * remainings in this loop are for (f_mode == EXE2MODIFY) */
 
         /* [Process 2] at the beginning of each page,
            recover from stack underflow, and put non-stack specials if necessary */
@@ -1026,7 +1026,7 @@ lastpage:           if(isdigit(*++out_pages)){
         fclose(fp_out);
         dvi->file_ptr = fp_out = NULL;
         return;
-    } /* done for EXE2CHECK; remainings are for EXE2INDEP */
+    } /* done for EXE2CHECK; remainings are for EXE2MODIFY */
 
     /* if -z option is given, add empty pages to make multiple of 4 pages */
     if(f_book && dim->total_page%4 == 0)
