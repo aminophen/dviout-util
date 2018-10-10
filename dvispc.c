@@ -229,6 +229,7 @@ int  f_mode = EXE2NONE; /*  1: -c page_indep
                             3: -s specials
                             4: -a to_Text
                             5: -x to_DVI   */
+/* default mode will be set in main() to be page_indep */
 
 int f_debug = 0;        /* -v */
 int f_overwrite = 0;
