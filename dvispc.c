@@ -659,6 +659,7 @@ skip: ;
                 else
                     fp_out = stdout;
             }else
+                /* [TODO] this may not work well? (especially for EXE2DVI) */
                 /* if fp_out == NULL, non-empty stdin and free stdout
                     -> the only argument = outfile (input from stdin)
                    otherwise, redirected stdout
@@ -697,7 +698,7 @@ skip: ;
         if(fp_in == NULL || *infile){
             fp_in = fopen(infile, READ_TEXT);
             if(fp_in == NULL){
-                fprintf(stderr, "Cannot open %s\n", infile);
+                fprintf(stderr, "Cannot open %s for input\n", infile);
                 exit(1);
             }
         }
@@ -708,7 +709,7 @@ skip: ;
                 strcat(outfile, ".dvi");
             fp_out = fopen(outfile, WRITE_BINARY);
             if(fp_out == NULL){
-                fprintf(stderr, "Cannot open %s\n", outfile);
+                fprintf(stderr, "Cannot open %s for output\n", outfile);
                 exit(1);
             }
         }
@@ -766,7 +767,7 @@ same:       strcpy(outfile, infile);
         dvi_info.file_ptr = fp_in;
         dvi_info.file_name = "stdin";
     }else if ((dvi_info.file_ptr = fopen(dvi_info.file_name, READ_BINARY)) == NULL){
-        fprintf(stderr, "Cannot open %s\n", infile);
+        fprintf(stderr, "Cannot open %s for input\n", infile);
         exit(1);
     }
     /* [TODO] I'd like to use outfile if given */
@@ -778,7 +779,7 @@ same:       strcpy(outfile, infile);
         else{
             fp_out = fopen(outfile, WRITE_TEXT);
             if(fp_out == NULL){
-                fprintf(stderr, "Cannot open %s\n", outfile);
+                fprintf(stderr, "Cannot open %s for output\n", outfile);
                 exit(1);
             }
         }
@@ -811,7 +812,7 @@ void translate(DVIFILE_INFO *dvi, DIMENSION *dim)
     if(f_mode == EXE2MODIFY){
         fp = (*outfile)?fopen(outfile, WRITE_BINARY):fp_out;
         if(fp == NULL){
-            fprintf(stderr, "Cannot open %s\n", outfile);
+            fprintf(stderr, "Cannot open %s for output\n", outfile);
             exit(4);
         }else if(fp==stdout)
             f_debug = 0; /* ignore -v option, as debug output goes there, sigh */
