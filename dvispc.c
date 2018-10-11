@@ -1365,8 +1365,10 @@ void sp_color(char *sp)
         return;
     }
     if(strstr(sp, "push")){
-        if(color_depth >= MAX_COLOR)
-            error("Too many color push > 512");
+        if(color_depth >= MAX_COLOR){
+            fprintf(stderr, "Too many color push > %d\n", MAX_COLOR);
+            Exit(1);
+        }
         if(color_depth){
             s = color_pt[color_depth-1];
             s += strlen(s) + 1;
@@ -1390,8 +1392,10 @@ void sp_pdf_bcolor(char *sp)
     char *s;
 
     /* copied from "color push" routine of sp_color */
-    if(pdf_color_depth >= MAX_COLOR)
-        error("Too many pdf:bcolor > 512");
+    if(pdf_color_depth >= MAX_COLOR){
+        fprintf(stderr, "Too many pdf:bcolor > %d\n", MAX_COLOR);
+        Exit(1);
+    }
     if(pdf_color_depth){
         s = pdf_color_pt[pdf_color_depth-1];
         s += strlen(s) + 1;
@@ -1427,8 +1431,10 @@ void sp_pdf_ecolor(char *sp)
 void sp_pdf_bann(char *sp)
 {
     char *s;
-    if(pdf_annot_depth >= MAX_ANNOT)
-        error("Too many pdf:bann > 8");
+    if(pdf_annot_depth >= MAX_ANNOT){
+        fprintf(stderr, "Too many pdf:bann > %d\n", MAX_ANNOT);
+        Exit(1);
+    }
     if(pdf_annot_depth){
         s = pdf_annot_pt[pdf_annot_depth-1];
         s += strlen(s) + 1;
