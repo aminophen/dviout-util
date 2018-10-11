@@ -221,15 +221,14 @@ struct DIMENSION_REC {
 int f_dtl = 0;
 
 enum {
-    EXE2NONE, EXE2MODIFY, EXE2CHECK, EXE2SPECIAL, EXE2TEXT, EXE2DVI
+    EXE2MODIFY, EXE2CHECK, EXE2SPECIAL, EXE2TEXT, EXE2DVI
 };
 
-int  f_mode = EXE2NONE; /*  1: -c modify
-                            2: -d report only
-                            3: -s specials
-                            4: -a to_Text
-                            5: -x to_DVI   */
-/* default mode will be set in main() to be page_indep */
+int f_mode = EXE2MODIFY; /*  0: -c modify
+                             1: -d report only
+                             2: -s specials
+                             3: -a to_Text
+                             4: -x to_DVI   */
 
 int f_debug = 0;        /* -v */
 int f_overwrite = 0;
@@ -609,8 +608,6 @@ skip: ;
     /* now, i = (number of optional arguments) + 1
        cf.  argc = (number of all arguments) + 1
         {argv[0] is the program name itself} ^^^ */
-
-    if(!f_mode) f_mode = EXE2MODIFY; /* default mode */
 
     fnum = 0;
     if(!isatty(fileno(stdin))){  /* if stdin is redirected from a file */
