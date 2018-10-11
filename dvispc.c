@@ -793,11 +793,16 @@ void write_sp(FILE *fp, char *sp)
     int len;
     len = strlen(sp);
 
-    if(len > 255){
+    if(len <= 0xff)
+        fprintf(fp, "%c%c%s", XXX1, len, sp);
+    else if(len <= 0xffffffff){
+        fprintf(fp, "%c", XXX1+3);
+        write_long(len, fp);
+        fprintf(fp, "%s", sp);
+    }else{
         fprintf(stderr, "Too long special:\n%s\n", sp);
         Exit(1);
     }
-    fprintf(fp, "%c%c%s", XXX1, len, sp);
 }
 
 
