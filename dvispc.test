@@ -85,8 +85,8 @@ diff --strip-trailing-cr $testdir/test.spc $testdir/test.spc \
   cmp $testdir/longspecout.dvi xlongspecout.dvi && echo || exit 13
 
 ## check default is -c
-./dvispc $testdir/longspec.dvi xlongspecout.dvi && \
-  cmp $testdir/longspecout.dvi xlongspecout.dvi && echo || exit 14
+./dvispc $testdir/longspec.dvi x1longspecout.dvi && \
+  cmp $testdir/longspecout.dvi x1longspecout.dvi && echo || exit 14
 
 
 exit 0
