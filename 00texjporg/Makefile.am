@@ -8,11 +8,11 @@ AM_CFLAGS = $(WARNING_CFLAGS)
 
 $(dviout_util_OBJECTS): $(KPATHSEA_DEPEND) $(PTEXENC_DEPEND)
 
-bin_PROGRAMS = dvispc propw chkdvifont
+bin_PROGRAMS = dvispc chkdvifont propw
 
 dvispc_SOURCES  = dvispc.c
-propw_SOURCES   = propw.c
 chkdvifont_SOURCES = chkdvifont.c dd.h msvcdir.h
+propw_SOURCES   = propw.c
 
 LDADD = $(KPATHSEA_LIBS)
 dvispc_LDADD = $(PTEXENC_LIBS) $(LDADD)
@@ -25,23 +25,20 @@ dist_man1_MANS = dvispc.man chkdvifont.man
 
 ## Tests
 ##
-TESTS = dvispc.test propw.test chkdvifont.test
+TESTS = dvispc.test chkdvifont.test propw.test
 dvispc.log: dvispc$(EXEEXT)
-propw.log: propw$(EXEEXT)
 chkdvifont.log: chkdvifont$(EXEEXT)
+propw.log: propw$(EXEEXT)
 EXTRA_DIST = $(TESTS)
 
 ## dvispc.test
-EXTRA_DIST += \
-	tests/test.tex tests/test.dvi \
-	tests/oldindep.tex tests/oldindep.dvi \
-	tests/test.spc tests/testout.dvi tests/oldindepout.dvi
-DISTCLEANFILES = x*test.spc x*testa.txt x*testax.dvi \
-	x*oldindepout.dvi x*testout.dvi
-
-## propw.test
-EXTRA_DIST += tests/jistest.pl
-DISTCLEANFILES += xjistest.pl
+EXTRA_DIST += tests/test.spc \
+	tests/test.tex tests/test.dvi tests/testout.dvi \
+	tests/oldindep.tex tests/oldindep.dvi tests/oldindepout.dvi \
+	tests/longspec.tex tests/longspec.dvi tests/longspecout.dvi
+DISTCLEANFILES = x*test.spc \
+	x*testa.txt x*testax.dvi \
+	x*testout.dvi x*oldindepout.dvi x*longspecout.dvi
 
 ## chkdvifont.test
 EXTRA_DIST += tests/test.cfn \
@@ -52,4 +49,8 @@ EXTRA_DIST += tests/test.cfn \
 DISTCLEANFILES += test.dvi xtest.cfn \
 	xjis.cfn xeufm10.cfn xeufm10.ed.cfn \
 	xcmr10.cfn xupjisr-h.cfn
+
+## propw.test
+EXTRA_DIST += tests/jistest.pl
+DISTCLEANFILES += xjistest.pl
 
