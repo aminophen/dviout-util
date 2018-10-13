@@ -937,8 +937,8 @@ lastpage:           if(isdigit(*++out_pages)){
                 flag++;
             }
             if(flag){
-                fprintf(fp_out, "\n");
-                f_needs_corr++;
+                fprintf(fp_out, "\n"); /* at least one special printed */
+                f_needs_corr += flag;
             }
             /* } */
         }
