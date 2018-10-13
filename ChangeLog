@@ -7,6 +7,7 @@
 	* tests/tpicpn.{tex,dvi}, tests/tpicsh.{tex,dvi},
 	tests/first.{tex,dvi}, tests/firstpn.{tex,dvi}: New tests.
 	* Makefile.am: Adjusted.
+	* configure.ac: Version 20181014.
 
 2018-10-13  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
 
