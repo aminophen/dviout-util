@@ -1,5 +1,6 @@
 #!/bin/sh
 # backport from TL tree (texjporg/tex-jp-build) -> standalone repo
+mkdir -p tests
 
 # without encoding conversion
 # (tests/jistest.pl is included but overwritten later)

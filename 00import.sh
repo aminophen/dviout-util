@@ -1,5 +1,7 @@
 #!/bin/sh
 # import from standalone repo -> TL tree (texjporg/tex-jp-build)
+mkdir -p 00texjporg
+mkdir -p 00texjporg/tests
 
 # without encoding conversion
 # (tests/jistest.pl is included but overwritten later)
