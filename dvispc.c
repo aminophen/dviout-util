@@ -258,6 +258,7 @@ int  f_background = 0;  /* in each page, 0: not found; 1: found */
 char pdf_bgcolor[MAX_LEN];
 int  f_pdf_bgcolor = 0; /* in each page, 0: not found; 1: found */
 char tpic_pn[MAX_LEN];
+char tpic_pn_prev[MAX_LEN];
 int  f_pn = 0;  /* in each page, 0: not found and not actually used;
                                  1: found before actual use
                                 -1: not found before actual use */
@@ -930,15 +931,22 @@ lastpage:           if(isdigit(*++out_pages)){
                 fprintf(fp_out, "\n%d:%s", count+1, pdf_color_pt[count]);
             for(count = 0; count < pdf_annot_depth; count++)
                 fprintf(fp_out, "\n%d:%s", count+1, pdf_annot_pt[count]);
-            if(tpic_pn[0] && f_pn < 0){ /* [TODO] tpic_pn[0] might have been overwritten */
-                fprintf(fp_out, "\n%s", tpic_pn);
-                flag++;
+            if(f_pn < 0){
+                if(!tpic_pn_prev[0])
+                    fprintf(stderr, "Cannot find valid tpic pn.\n"
+                                    "Please check your LaTeX source.\n");
+                else{
+                    fprintf(fp_out, "\n%s", tpic_pn_prev);
+                    flag++;
+                }
             }
             if(flag){
                 fprintf(fp_out, "\n"); /* at least one special printed */
                 f_needs_corr += flag;
             }
             /* } */
+            if(tpic_pn[0])  /* save current status of tpic_pn */
+                strncpy(tpic_pn_prev, tpic_pn, MAX_LEN);
         }
         if(f_mode == EXE2CHECK)
             continue;  /* skip loop if (f_mode == EXE2CHECK);
@@ -971,6 +979,15 @@ lastpage:           if(isdigit(*++out_pages)){
 //            f_needs_corr++;
 //            pdf_annot_under--;
 //        }
+        if(f_pn < 0) {    /* tpic_pn from the former page is effective */
+            if(!tpic_pn_prev[0])
+                fprintf(stderr, "\nCannot find valid tpic pn."
+                                "\nPlease check your LaTeX source.");
+            else{
+                write_sp(fp, tpic_pn_prev);
+                f_needs_corr++;
+            }
+        }
 
         /* [Process 3] write contents of the current page */
         fseek(dvi->file_ptr, dim->page_index[page]+45, SEEK_SET);
@@ -1011,18 +1028,12 @@ lastpage:           if(isdigit(*++out_pages)){
             f_needs_corr += color_depth;
             f_needs_corr += pdf_color_depth;
 //            f_needs_corr += pdf_annot_depth;
-            /* Special case for tpic_pn: emit it here!
-               it is dangerous to delay this until [Process 2] of the next page
-               using if(tpic_pn[0] && f_pn < 0).
-               Note that, since pn can have different values in the same page,
-               tpic_pn[0] might have been overwritten after scanning the
-               whole next page.
-               Actually this can result in too much unnecessary modification
-               but don't care for now */
-            if(tpic_pn[0]) {    /* tpic_pn from the former page is effective */
-                write_sp(fp, tpic_pn);
-                f_needs_corr++;
-            }
+            /* Special case for tpic_pn:
+               save current status of tpic_pn now, before it is (probably)
+               overwritten after scanning the whole next page.
+               Note that pn can have different values in the same page! */
+            if(tpic_pn[0])  /* save current status of tpic_pn */
+                strncpy(tpic_pn_prev, tpic_pn, MAX_LEN);
         }
     } /* page loop end */
 
