@@ -16,8 +16,8 @@ diff --strip-trailing-cr $testdir/oldindep.spc $testdir/oldindep.spc \
 
 ## EXE2SPECIAL
 
-./dvispc -s $testdir/oldindep.dvi xoldindep.spc && \
-  diff $diffoptCRLF $testdir/oldindep.spc xoldindep.spc && echo || exit 1
+./dvispc -s $testdir/oldindep.dvi x0oldindep.spc && \
+  diff $diffoptCRLF $testdir/oldindep.spc x0oldindep.spc && echo || exit 1
 
 ./dvispc -s $testdir/oldindep.dvi > x1oldindep.spc && \
   diff $diffoptCRLF $testdir/oldindep.spc x1oldindep.spc && echo || exit 2
@@ -33,9 +33,9 @@ diff --strip-trailing-cr $testdir/oldindep.spc $testdir/oldindep.spc \
 
 ## EXE2TEXT + EXE2DVI
 
-./dvispc -a $testdir/oldindep.dvi xoldindepa.txt && \
-  ./dvispc -x xoldindepa.txt xoldindepax.dvi && \
-  cmp $testdir/oldindep.dvi xoldindepax.dvi && echo || exit 4
+./dvispc -a $testdir/oldindep.dvi x0oldindepa.txt && \
+  ./dvispc -x x0oldindepa.txt x0oldindepax.dvi && \
+  cmp $testdir/oldindep.dvi x0oldindepax.dvi && echo || exit 4
 
 ./dvispc -a $testdir/oldindep.dvi > x1oldindepa.txt && \
   ./dvispc -x < x1oldindepa.txt > x1oldindepax.dvi && \
@@ -51,15 +51,15 @@ diff --strip-trailing-cr $testdir/oldindep.spc $testdir/oldindep.spc \
 
 ## EXE2INDEP
 
-./dvispc -c $testdir/oldindep.dvi xoldindepout.dvi && \
-  cmp $testdir/oldindepout.dvi xoldindepout.dvi && echo || exit 1
+./dvispc -c $testdir/oldindep.dvi x0oldindepout.dvi && \
+  cmp $testdir/oldindepout.dvi x0oldindepout.dvi && echo || exit 1
 
 ./dvispc -c $testdir/oldindep.dvi > x1oldindepout.dvi && \
   cmp $testdir/oldindepout.dvi x1oldindepout.dvi && echo || exit 2
 
 ## check default is -c
-./dvispc $testdir/oldindep.dvi x1oldindepout.dvi && \
-  cmp $testdir/oldindepout.dvi x1oldindepout.dvi && echo || exit 3
+./dvispc $testdir/oldindep.dvi x2oldindepout.dvi && \
+  cmp $testdir/oldindepout.dvi x2oldindepout.dvi && echo || exit 3
 
 ## check default overwrite
 # not working as expected only for test (redirect??)
@@ -74,8 +74,8 @@ diff --strip-trailing-cr $testdir/oldindep.spc $testdir/oldindep.spc \
 # exit code 1 for usage without argument. (the above line did it!)
 
 ## page independence in reversed order which requires prior scanning
-./dvispc -c $testdir/reverse.dvi xreverseout.dvi && \
-  cmp $testdir/reverseout.dvi xreverseout.dvi && echo || exit 5
+./dvispc -c $testdir/reverse.dvi x0reverseout.dvi && \
+  cmp $testdir/reverseout.dvi x0reverseout.dvi && echo || exit 5
 
 ./dvispc -c $testdir/reverse.dvi > x1reverseout.dvi && \
   cmp $testdir/reverseout.dvi x1reverseout.dvi && echo || exit 6
