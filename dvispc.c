@@ -908,8 +908,6 @@ lastpage:           if(isdigit(*++out_pages)){
 
     for(page = 1; page <= dim->total_page; page++){ /* page loop start */
         fseek(dvi->file_ptr, dim->page_index[page], SEEK_SET);
-        f_background = 0;
-        f_pdf_bgcolor = 0;
         pos = interpret(dvi->file_ptr); /* scanned the whole page content; now
                                            pos = position of EOP + 1 */
         if(f_debug){
@@ -932,7 +930,7 @@ lastpage:           if(isdigit(*++out_pages)){
                 fprintf(fp_out, "\n%d:%s", count+1, pdf_color_pt[count]);
             for(count = 0; count < pdf_annot_depth; count++)
                 fprintf(fp_out, "\n%d:%s", count+1, pdf_annot_pt[count]);
-            if(tpic_pn[0] && f_pn < 0){
+            if(tpic_pn[0] && f_pn < 0){ /* [TODO] tpic_pn[0] might have been overwritten */
                 fprintf(fp_out, "\n%s", tpic_pn);
                 flag++;
             }
@@ -973,10 +971,6 @@ lastpage:           if(isdigit(*++out_pages)){
 //            f_needs_corr++;
 //            pdf_annot_under--;
 //        }
-        if(tpic_pn[0] && f_pn < 0) {    /* tpic_pn from the former page is effective */
-            write_sp(fp, tpic_pn);
-            f_needs_corr++;
-        }
 
         /* [Process 3] write contents of the current page */
         fseek(dvi->file_ptr, dim->page_index[page]+45, SEEK_SET);
@@ -1017,6 +1011,18 @@ lastpage:           if(isdigit(*++out_pages)){
             f_needs_corr += color_depth;
             f_needs_corr += pdf_color_depth;
 //            f_needs_corr += pdf_annot_depth;
+            /* Special case for tpic_pn: emit it here!
+               it is dangerous to delay this until [Process 2] of the next page
+               using if(tpic_pn[0] && f_pn < 0).
+               Note that, since pn can have different values in the same page,
+               tpic_pn[0] might have been overwritten after scanning the
+               whole next page.
+               Actually this can result in too much unnecessary modification
+               but don't care for now */
+            if(tpic_pn[0]) {    /* tpic_pn from the former page is effective */
+                write_sp(fp, tpic_pn);
+                f_needs_corr++;
+            }
         }
     } /* page loop end */
 
@@ -1273,6 +1279,9 @@ int strsubcmp_n(char *s, char *t)
 uint s_work(FILE *dvi)
 {
     int code, mode, tmp = 0;
+    f_background = 0;
+    f_pdf_bgcolor = 0;
+    f_pn = 0;
 
     while ((code = (uchar)read_byte(dvi)) != EOP){
         if(code >= 128){
@@ -1331,8 +1340,7 @@ skip:                 while (tmp--)
                                 f_pn = 1;
                         }else if(!f_pn && 
                           (!strsubcmp(special, "pa") ||         /* pa: tpic pen at */
-                           !strsubcmp(special, "ar") ||         /* ar: draw circle */
-                           !strsubcmp(special, "ia")) )         /* ia: fill */
+                           !strsubcmp(special, "ar")) )         /* ar: draw circle */
                             f_pn = -1;
                         else if(!strsubcmp(special, "color"))   /* color push/pop */
                             sp_color(special);
