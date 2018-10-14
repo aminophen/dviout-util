@@ -802,6 +802,10 @@ void write_sp(FILE *fp, char *sp)
     int len;
     len = strlen(sp);
 
+    if(f_debug)
+        fprintf(fp_out, "%s", sp);
+    if(f_mode != EXE2MODIFY)
+        return; /* dry-run for EXE2CHECK */
     if(len <= 0xff)
         fprintf(fp, "%c%c%s", XXX1, len, sp);
     else if(len <= 0xffffffff){
@@ -916,53 +920,7 @@ lastpage:           if(isdigit(*++out_pages)){
                                            pos = position of EOP + 1 */
         if(f_debug){    /* EXE2CHECK always falls into this */
             fprintf(fp_out, "[%d]", page);
-            flag = color_depth;
-            flag += pdf_color_depth;
-            flag += pdf_annot_depth;
-            if(background[0] && !f_background){
-                if(!background_prev[0]) /* assume white */
-                    fprintf(fp_out, "\nbackground gray 1");
-                else
-                    fprintf(fp_out, "\n%s", background_prev);
-                flag++;
-            }
-            if(pdf_bgcolor[0] && !f_pdf_bgcolor){
-                if(!pdf_bgcolor_prev[0]) /* assume white */
-                    fprintf(fp_out, "\npdf:bgcolor [1]");
-                else
-                    fprintf(fp_out, "\n%s", pdf_bgcolor_prev);
-                flag++;
-            }
-            for(count = 0; count < color_depth; count++)
-                fprintf(fp_out, "\n%d:%s", count+1, color_pt[count]);
-            for(count = 0; count < pdf_color_depth; count++)
-                fprintf(fp_out, "\n%d:%s", count+1, pdf_color_pt[count]);
-            for(count = 0; count < pdf_annot_depth; count++)
-                fprintf(fp_out, "\n%d:%s", count+1, pdf_annot_pt[count]);
-            if(f_pn < 0){
-                if(!tpic_pn_prev[0])
-                    fprintf(stderr, "Cannot find valid tpic pn.\n"
-                                    "Please check your LaTeX source.\n");
-                else{
-                    fprintf(fp_out, "\n%s", tpic_pn_prev);
-                    flag++;
-                }
-            }
-            if(flag){
-                fprintf(fp_out, "\n"); /* at least one special printed */
-                f_needs_corr += flag;
-            }
-        }
-        if(f_mode == EXE2CHECK){
-            /* copied from [Process 2] */
-            if(background[0] && f_background)
-                strncpy(background_prev, background, MAX_LEN);      /* save current */
-            if(pdf_bgcolor[0] && f_pdf_bgcolor)
-                strncpy(pdf_bgcolor_prev, pdf_bgcolor, MAX_LEN);    /* save current */
-            if(tpic_pn[0] && f_pn)  /* tpic_pn used in this page */
-                strncpy(tpic_pn_prev, tpic_pn, MAX_LEN);    /* save current */
-            continue;  /* skip loop if (f_mode == EXE2CHECK);
-                        * remainings in this loop are for (f_mode == EXE2MODIFY) */
+            flag = f_needs_corr;    /* reserved for later check */
         }
 
         /* [Process 2] Before writing the current page, handle non-stack specials.
@@ -983,6 +941,7 @@ lastpage:           if(isdigit(*++out_pages)){
         }
         if(background[0]){  /* background used somewhere */
             if(!f_background){  /* no background in this page */
+                if(f_debug) fprintf(fp_out, "\n");
                 if(!background_prev[0]) /* assume white */
                     write_sp(fp, "background gray 1");
                 else
@@ -993,6 +952,7 @@ lastpage:           if(isdigit(*++out_pages)){
         }
         if(pdf_bgcolor[0]){ /* pdf:bgcolor used somewhere */
             if(!f_pdf_bgcolor){ /* no pdf:bgcolor in this page */
+                if(f_debug) fprintf(fp_out, "\n");
                 if(!pdf_bgcolor_prev[0]) /* assume white */
                     write_sp(fp, "pdf:bgcolor [1]");
                 else
@@ -1011,6 +971,7 @@ lastpage:           if(isdigit(*++out_pages)){
                 fprintf(stderr, "\nCannot find valid tpic pn."
                                 "\nPlease check your LaTeX source.");
             else{                   /* ... OK */
+                if(f_debug) fprintf(fp_out, "\n");
                 write_sp(fp, tpic_pn_prev);
                 f_needs_corr++;
             }
@@ -1019,49 +980,91 @@ lastpage:           if(isdigit(*++out_pages)){
             strncpy(tpic_pn_prev, tpic_pn, MAX_LEN);    /* save current */
 
         /* [Process 3] Write contents of the current page. */
-        fseek(dvi->file_ptr, dim->page_index[page]+45, SEEK_SET);
-        for(size = pos - dim->page_index[page] - 46; size > 0; size--)
-            write_byte(read_byte(dvi->file_ptr), fp);
+        if(f_mode == EXE2MODIFY){
+            fseek(dvi->file_ptr, dim->page_index[page]+45, SEEK_SET);
+            for(size = pos - dim->page_index[page] - 46; size > 0; size--)
+                write_byte(read_byte(dvi->file_ptr), fp);
+        }
 
         /* [Process 4] After writing the current page,
            close not-yet-closed stacks. */
         for(count = 0; count < color_depth; count++){
-            write_sp(fp, "color pop");
+            if(f_debug){
+                f_debug = 0;    /* disable debug printing temporarily */
+                write_sp(fp, "color pop");
+                f_debug = 1;
+            }else
+                write_sp(fp, "color pop");
             f_needs_corr++;
         }
         for(count = 0; count < pdf_color_depth; count++){
-            write_sp(fp, "pdf:ecolor");
+            if(f_debug){
+                f_debug = 0;    /* disable debug printing temporarily */
+                write_sp(fp, "pdf:ecolor");
+                f_debug = 1;
+            }else
+                write_sp(fp, "pdf:ecolor");
             f_needs_corr++;
         }
 //        for(count = 0; count < pdf_annot_depth; count++){
-//            write_sp(fp, "pdf:eann");
+//            if(f_debug){
+//                f_debug = 0;    /* disable debug printing temporarily */
+//                write_sp(fp, "pdf:eann");
+//                f_debug = 1;
+//            }else
+//                write_sp(fp, "pdf:eann");
 //            f_needs_corr++;
 //        }
-        write_byte((uchar)EOP, fp); /* write EOP */
-        former = current;
-        current = ftell(fp);        /* get position of BOP/POST */
+        if(f_mode == EXE2MODIFY){
+            write_byte((uchar)EOP, fp); /* write EOP */
+            former = current;
+            current = ftell(fp);        /* get position of BOP/POST */
+        }
 
-        if(page == dim->total_page)
+        if(page == dim->total_page){
+            if(f_debug){
+                /* last page has not-yet-closed stacks, check your LaTeX source */
+                for(count = 0; count < color_depth; count++)
+                    fprintf(fp_out, "\n%d:%s", count+1, color_pt[count]);
+                for(count = 0; count < pdf_color_depth; count++)
+                    fprintf(fp_out, "\n%d:%s", count+1, pdf_color_pt[count]);
+                for(count = 0; count < pdf_annot_depth; count++)
+                    fprintf(fp_out, "\n%d:%s", count+1, pdf_annot_pt[count]);
+            }
             break;  /* exit loop for the last page */
+        }
 
         /* [Process 5] Except for the last page (checked above),
            start the next page with passing not-yet-closed stacks. */
-        fseek(dvi->file_ptr, dim->page_index[page+1], SEEK_SET);
-        for(size = 41; size > 0; size--)  /* write BOP and c[] */
-            write_byte(read_byte(dvi->file_ptr), fp);
-        write_long(former, fp); /* position of BOP of the former page */
-        for(count = 0; count < color_depth; count++)
+        if(f_mode == EXE2MODIFY){
+            fseek(dvi->file_ptr, dim->page_index[page+1], SEEK_SET);
+            for(size = 41; size > 0; size--)  /* write BOP and c[] */
+                write_byte(read_byte(dvi->file_ptr), fp);
+            write_long(former, fp); /* position of BOP of the former page */
+        }
+        for(count = 0; count < color_depth; count++){
+            if(f_debug) fprintf(fp_out, "\n%d:", count+1);
             write_sp(fp, color_pt[count]);
-        for(count = 0; count < pdf_color_depth; count++)
+        }
+        for(count = 0; count < pdf_color_depth; count++){
+            if(f_debug) fprintf(fp_out, "\n%d:", count+1);
             write_sp(fp, pdf_color_pt[count]);
-//        for(count = 0; count < pdf_annot_depth; count++)
+        }
+//        for(count = 0; count < pdf_annot_depth; count++){
+//            if(f_debug) fprintf(fp_out, "\n%d:", count+1);
 //            write_sp(fp, pdf_annot_pt[count]);
-        f_needs_corr += color_depth;
-        f_needs_corr += pdf_color_depth;
-//        f_needs_corr += pdf_annot_depth;
+//        }
+        /* f_needs_corr already set properly in [Process 4] */
+
+        if(f_debug){    /* EXE2CHECK always falls into this */
+            if(flag != f_needs_corr)    /* at least one special printed for debug */
+                fprintf(fp_out, "\n");
+        }
     } /* page loop end */
 
     if(f_debug) {
+        if(flag != f_needs_corr)    /* at least one special printed for debug */
+            fprintf(fp_out, "\n");
         if(color_depth_max)
             fprintf(fp_out, "\nMaximal depth of color stack:%d", color_depth_max);
         if(pdf_color_depth_max)
