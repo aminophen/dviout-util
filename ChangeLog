@@ -1,5 +1,7 @@
 2018-10-15  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
 
+	* dvispc.c: Use common routine for EXE2MODIFY and EXE2CHECK
+	for simplicity.
 	* dvispc.test: Add tests for consistency between EXE2MODIFY
 	and EXE2CHECK.
 	* tests/oldindep.dry, tests/tpicpn.dry, tests/tpicsh.dry,
