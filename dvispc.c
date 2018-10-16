@@ -248,6 +248,7 @@ int  f_book = 0;  /* multiple of four pages */
 
 int  f_ptex = 0;
 int  f_prescan = 0;
+int  f_last = 0;
 int  max_stack;
 char *out_pages ="T-L";
 int  total_book_page;
@@ -804,7 +805,7 @@ void write_sp(FILE *fp, char *sp)
 
     if(f_debug)
         fprintf(fp_out, "%s", sp);
-    if(f_mode != EXE2MODIFY)
+    if(f_mode != EXE2MODIFY || f_last)
         return; /* dry-run for EXE2CHECK */
     if(len <= 0xff)
         fprintf(fp, "%c%c%s", XXX1, len, sp);
@@ -816,6 +817,15 @@ void write_sp(FILE *fp, char *sp)
         fprintf(stderr, "Too long special:\n%s\n", sp);
         Exit(1);
     }
+}
+void write_sp_nodebug(FILE *fp, char *sp)
+{   /* omit debug message (for backward compatibility) */
+    if(f_debug){
+        f_debug = 0;    /* disable debug printing temporarily */
+        write_sp(fp, sp);
+        f_debug = 1;
+    }else
+        write_sp(fp, sp);
 }
 
 
@@ -835,6 +845,7 @@ void translate(DVIFILE_INFO *dvi, DIMENSION *dim)
         fp = NULL;
 
     f_needs_corr = flag = 0;
+    f_last = 0;
 
     if(f_mode == EXE2TEXT || f_mode == EXE2SPECIAL){
         while(out_pages && *out_pages){
@@ -930,12 +941,12 @@ lastpage:           if(isdigit(*++out_pages)){
            Also, if the page is suffering from stack underflow,
            open lacking stacks beforehand. */
         while(color_under > 0){     /* recover underflow of color stack */
-            write_sp(fp, "color push  Black");
+            write_sp_nodebug(fp, "color push  Black");
             f_needs_corr++;
             color_under--;
         }
         while(pdf_color_under > 0){ /* recover underflow of pdf:bcolor ... pdf:ecolor stack */
-            write_sp(fp, "pdf:bcolor [0]");
+            write_sp_nodebug(fp, "pdf:bcolor [0]");
             f_needs_corr++;
             pdf_color_under--;
         }
@@ -989,30 +1000,15 @@ lastpage:           if(isdigit(*++out_pages)){
         /* [Process 4] After writing the current page,
            close not-yet-closed stacks. */
         for(count = 0; count < color_depth; count++){
-            if(f_debug){
-                f_debug = 0;    /* disable debug printing temporarily */
-                write_sp(fp, "color pop");
-                f_debug = 1;
-            }else
-                write_sp(fp, "color pop");
+            write_sp_nodebug(fp, "color pop");
             f_needs_corr++;
         }
         for(count = 0; count < pdf_color_depth; count++){
-            if(f_debug){
-                f_debug = 0;    /* disable debug printing temporarily */
-                write_sp(fp, "pdf:ecolor");
-                f_debug = 1;
-            }else
-                write_sp(fp, "pdf:ecolor");
+            write_sp_nodebug(fp, "pdf:ecolor");
             f_needs_corr++;
         }
 //        for(count = 0; count < pdf_annot_depth; count++){
-//            if(f_debug){
-//                f_debug = 0;    /* disable debug printing temporarily */
-//                write_sp(fp, "pdf:eann");
-//                f_debug = 1;
-//            }else
-//                write_sp(fp, "pdf:eann");
+//            write_sp_nodebug(fp, "pdf:eann");
 //            f_needs_corr++;
 //        }
         if(f_mode == EXE2MODIFY){
@@ -1021,22 +1017,12 @@ lastpage:           if(isdigit(*++out_pages)){
             current = ftell(fp);        /* get position of BOP/POST */
         }
 
-        if(page == dim->total_page){
-            if(f_debug){
-                /* last page has not-yet-closed stacks, check your LaTeX source */
-                for(count = 0; count < color_depth; count++)
-                    fprintf(fp_out, "\n%d:%s", count+1, color_pt[count]);
-                for(count = 0; count < pdf_color_depth; count++)
-                    fprintf(fp_out, "\n%d:%s", count+1, pdf_color_pt[count]);
-                for(count = 0; count < pdf_annot_depth; count++)
-                    fprintf(fp_out, "\n%d:%s", count+1, pdf_annot_pt[count]);
-            }
-            break;  /* exit loop for the last page */
-        }
+        if(page == dim->total_page)
+            f_last = 1; /* reached the last page, change behavior of write_sp(fp,sp) */
 
-        /* [Process 5] Except for the last page (checked above),
+        /* [Process 5] Except for the last page,
            start the next page with passing not-yet-closed stacks. */
-        if(f_mode == EXE2MODIFY){
+        if(f_mode == EXE2MODIFY && !f_last){
             fseek(dvi->file_ptr, dim->page_index[page+1], SEEK_SET);
             for(size = 41; size > 0; size--)  /* write BOP and c[] */
                 write_byte(read_byte(dvi->file_ptr), fp);
@@ -1060,11 +1046,10 @@ lastpage:           if(isdigit(*++out_pages)){
             if(flag != f_needs_corr)    /* at least one special printed for debug */
                 fprintf(fp_out, "\n");
         }
+        f_last = 0; /* restore write_sp(fp,sp) */
     } /* page loop end */
 
-    if(f_debug) {
-        if(flag != f_needs_corr)    /* at least one special printed for debug */
-            fprintf(fp_out, "\n");
+    if(f_debug) {   /* EXE2CHECK always falls into this */
         if(color_depth_max)
             fprintf(fp_out, "\nMaximal depth of color stack:%d", color_depth_max);
         if(pdf_color_depth_max)
