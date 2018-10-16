@@ -78,6 +78,13 @@ diff --strip-trailing-cr $testdir/oldindep.spc $testdir/oldindep.spc \
 #  ./dvispc x3write.dvi
 #  cmp $testdir/oldindepout.dvi x3write.dvi && echo || exit 5
 
+## case of underflow
+./dvispc $testdir/under.dvi x0underout.dvi && \
+  cmp $testdir/underout.dvi x0underout.dvi && echo || exit 6
+rm -f x1underout.dvi
+./dvispc x0underout.dvi x1underout.dvi && \
+  if test -f x1underout.dvi; then exit 1; else echo; fi || exit 6
+
 ./dvispc && echo || exit 0
 
 # the following tests will not pass for old version written by SHIMA.
@@ -95,7 +102,7 @@ diff --strip-trailing-cr $testdir/oldindep.spc $testdir/oldindep.spc \
   diff $diffoptCRLF $testdir/tpicsh.dry x0tpicsh.dry && echo || exit 1
 rm -f x0tpicshout.dvi
 ./dvispc $testdir/tpicsh.dvi x0tpicshout.dvi && \
-  if test -f x0tpicshout.dvi; then exit 1; else echo; fi
+  if test -f x0tpicshout.dvi; then exit 1; else echo; fi || exit 1
 
 ## page independence in reverse order which requires prior scanning
 ./dvispc -d $testdir/reverse.dvi >xreverse.dry
@@ -114,7 +121,7 @@ rm -f x0tpicshout.dvi
   diff $diffoptCRLF $testdir/firstpn.dry xfirstpn.dry && echo || exit 1
 rm -f xfirstpn.dvi
 ./dvispc $testdir/firstpn.dvi xfirstpn.dvi && \
-  if test -f xfirstpn.dvi; then exit 1; else echo; fi
+  if test -f xfirstpn.dvi; then exit 1; else echo; fi || exit 1
 
 # ==== future work start ====
 
