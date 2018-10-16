@@ -25,6 +25,17 @@ black
 \newpage
 black
 \newpage
+\AtBeginShipoutNext{\AtBeginShipoutDiscard}
+{\color{red}
+ start red (but discarded)
+ {\color{blue}
+  start blue (but discarded)
+\newpage
+  end blue}
+ end red}
+\newpage
+black
+\newpage
 {\color{yellow}
  start yellow
 \newpage
