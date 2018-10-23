@@ -35,6 +35,8 @@ EXTRA_DIST = $(TESTS)
 EXTRA_DIST += tests/oldindep.spc \
 	tests/oldindep.tex tests/oldindep.dvi \
 	tests/oldindep.dry tests/oldindepout.dvi \
+	tests/under.tex tests/under.dvi \
+	tests/underout.dvi \
 	tests/tpicpn.tex tests/tpicpn.dvi \
 	tests/tpicpn.dry tests/tpicpnout.dvi \
 	tests/tpicsh.tex tests/tpicsh.dvi \
@@ -51,6 +53,7 @@ EXTRA_DIST += tests/oldindep.spc \
 DISTCLEANFILES = x*oldindep.spc \
 	x*oldindepa.txt x*oldindepax.dvi \
 	x*oldindep.dry x*oldindepout.dvi \
+	x*underout.dvi \
 	x*tpicpn.dry x*tpicpnout.dvi \
 	x*tpicsh.dry \
 	x*reverse.dry x*reverseout.dvi \
