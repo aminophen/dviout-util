@@ -442,8 +442,8 @@ void usage(int ex)
 #endif
     "       dvispc -x[..] [-ltv][-r..] [input_text_file] output_dvi_file\n\n"
     "Mode options:\n"
-    "   -c: make page-indepent DVI in specials (default)\n"
-    "   -d: check page-independence\n"
+    "   -c: correct input DVI to be page-indepent in specials (default)\n"
+    "   -d: dry run to check page-independence\n"
     "   -s: show specials\n"
     "   -a: translate DVI to Text\n"
     "   -x: translate Text to DVI (-x0:str0 1:chkfnt 2:variety)\n\n"
