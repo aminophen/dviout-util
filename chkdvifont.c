@@ -757,7 +757,7 @@ void get_font_list(DVIFILE_INFO *dvi)
 
 void tfm_define(FILE * fp)
 {
-	int i, ch, nt, ofmlevel;
+	int i, x, ch, nt, ofmlevel;
 	long lf, lh, bc, ec, nw, nh, nd, ni, nl, nk, ne, np, fontdir, sum, size,
 	    headerlength, topchar, topwidth, topheight, topdepth, topitalic, ncw, nlw, neew,
 	    nco, npc, nki, nwi, nkf, nwf, nkm, nwm, nkr, nwr, nkg, nwg, nkp, nwp;
@@ -918,18 +918,41 @@ void tfm_define(FILE * fp)
 		printf("Warning: There are %ld extensible recipes!", ne);
 #endif
 
+	font.c = read_n(fp,4);		/* header[0] */
+	font.d = read_long(fp);		/* header[1] */
+	if (ch == 'j') {	/* check for new features in pTeX p3.8.0 / JFM 2.0 */
+		for (i = 2; i < lh; i++)			/* the rest of header */
+			read_long(fp);
+		for (i = 0; i < nt; i++){			/* char_type */
+			read_n(fp,2); x = read_byte(fp); read_byte(fp);
+			if (x>0) ofmlevel |= 1;				/* 3-byte kanji code */
+		}
+		for (i = 0; i < ec-bc+1; i++)		/* char_info */
+			read_long(fp);
+		for (i = 0; i < nw+nh+nd+ni; i++)	/* width, height, depth, italic */
+			read_long(fp);
+		for (i = 0; i < nl; i++)			/* glue_kern */
+			x = read_byte(fp); read_n(fp,3);
+			if (x>0 && x<128) ofmlevel |= 2;	/* SKIP command */
+			if (x>128 && x<=255) ofmlevel |= 4;	/* rearrangement */
+	}
+	fclose(fp);
+
 	if (f_v != 0) {
 		if (ch == 'o')
 			printf("\t\"%s\" is a %cfm level %d file :%3ld  -> %3ld\n",
 				font.n, ch, ofmlevel, bc, ec);
-		else
+		else {
 			printf("\t\"%s\" is a %cfm%s file :%3ld  -> %3ld\n",
 				font.n, ch, u, bc, ec);
+			if (ch == 'j' && ofmlevel > 0) {
+				printf("\t\tNew features in pTeX p3.8.0 / JFM 2.0:\n");
+				if (ofmlevel & 1) printf("\t\t+ 3-byte kanji code\n");
+				if (ofmlevel & 2) printf("\t\t+ SKIP command in glue_kern\n");
+				if (ofmlevel & 4) printf("\t\t+ rearrangement in glue_kern\n");
+			}
+		}
 	}
-
-	font.c = read_n(fp,4);		/* header[0] */
-	font.d = read_long(fp);		/* header[1] */
-	fclose(fp);
 	check_font();
 }
 
