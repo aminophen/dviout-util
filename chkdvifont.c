@@ -757,7 +757,7 @@ void get_font_list(DVIFILE_INFO *dvi)
 
 void tfm_define(FILE * fp)
 {
-    int i, x, ch, nt, ofmlevel;
+    int i, x, ch, nt, tfmver;   /* tfmver = OFM level or JFM version */
     long lf, lh, bc, ec, nw, nh, nd, ni, nl, nk, ne, np, fontdir, sum, size,
         headerlength, topchar, topwidth, topheight, topdepth, topitalic, ncw, nlw, neew,
         nco, npc, nki, nwi, nkf, nwf, nkm, nwm, nkr, nwr, nkg, nwg, nkp, nwp;
@@ -776,7 +776,7 @@ void tfm_define(FILE * fp)
     ch = 't';
     u = "";
     nt = 0;
-    ofmlevel = 0;
+    tfmver = 0;
     headerlength = 6;
     topchar = 255;
     fontdir = 0;
@@ -785,8 +785,8 @@ void tfm_define(FILE * fp)
     if ((i=read_uint(fp)) == 0) {   /* (temporary) lf */
         /* assume OFM */
         ch = 'o';
-        ofmlevel = read_uint(fp);
-        if (ofmlevel == 0)
+        tfmver = read_uint(fp);
+        if (tfmver == 0)
             headerlength = 14;
         else
             headerlength = 29;
@@ -848,7 +848,7 @@ void tfm_define(FILE * fp)
         topheight = 255;
         topdepth = 255;
         topitalic = 255;
-        if (ofmlevel == 0) {
+        if (tfmver == 0) {
             ncw = 2 * ( ec - bc + 1 );
         }
         else {
@@ -925,7 +925,7 @@ void tfm_define(FILE * fp)
             read_long(fp);
         for (i = 0; i < nt; i++){           /* char_type */
             read_n(fp,2); x = read_byte(fp); read_byte(fp);
-            if (x>0) ofmlevel |= 1;             /* 3-byte kanji code */
+            if (x>0) tfmver |= 1;               /* 3-byte kanji code */
         }
         for (i = 0; i < ec-bc+1; i++)       /* char_info */
             read_long(fp);
@@ -933,23 +933,23 @@ void tfm_define(FILE * fp)
             read_long(fp);
         for (i = 0; i < nl; i++)            /* glue_kern */
             x = read_byte(fp); read_n(fp,3);
-            if (x>0 && x<128) ofmlevel |= 2;    /* SKIP command */
-            if (x>128 && x<=255) ofmlevel |= 4; /* rearrangement */
+            if (x>0 && x<128) tfmver |= 2;      /* SKIP command */
+            if (x>128 && x<=255) tfmver |= 4;   /* rearrangement */
     }
     fclose(fp);
 
     if (f_v != 0) {
         if (ch == 'o')
             printf("\t\"%s\" is a %cfm level %d file :%3ld  -> %3ld\n",
-                font.n, ch, ofmlevel, bc, ec);
+                font.n, ch, tfmver, bc, ec);
         else {
             printf("\t\"%s\" is a %cfm%s file :%3ld  -> %3ld\n",
                 font.n, ch, u, bc, ec);
-            if (ch == 'j' && ofmlevel > 0) {
+            if (ch == 'j' && tfmver > 0) {
                 printf("\t\tNew features in pTeX p3.8.0 / JFM 2.0:\n");
-                if (ofmlevel & 1) printf("\t\t+ 3-byte kanji code\n");
-                if (ofmlevel & 2) printf("\t\t+ SKIP command in glue_kern\n");
-                if (ofmlevel & 4) printf("\t\t+ rearrangement in glue_kern\n");
+                if (tfmver & 1) printf("\t\t+ 3-byte kanji code\n");
+                if (tfmver & 2) printf("\t\t+ SKIP command in glue_kern\n");
+                if (tfmver & 4) printf("\t\t+ rearrangement in glue_kern\n");
             }
         }
     }
