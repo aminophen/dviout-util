@@ -945,10 +945,23 @@ void tfm_define(FILE * fp)
     fclose(fp);
 
     if (f_v != 0) {
-        if (ch == 'o')
+        if (ch == 'o') {
             printf("\t\"%s\" is a %cfm level %d file :%3ld  -> %3ld\n",
                 font.n, ch, tfmver, bc, ec);
-        else {
+            printf("\t\t+ FONTDIR: ");
+                switch (fontdir) {
+                    case 0: printf("TL (default)"); break;
+                    case 1: printf("LT"); break;
+                    case 2: printf("TR"); break;
+                    case 3: printf("LB"); break;
+                    case 4: printf("BL"); break;
+                    case 5: printf("RT"); break;
+                    case 6: printf("BR"); break;
+                    case 7: printf("RB"); break;
+                    default: printf("unknown");
+                }
+            printf("\n");
+        } else {
             printf("\t\"%s\" is a %cfm%s file :%3ld  -> %3ld\n",
                 font.n, ch, u, bc, ec);
             if (ch == 'j' && tfmver > 0) {

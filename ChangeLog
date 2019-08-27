@@ -1,3 +1,7 @@
+2019-08-27  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* chkdvifont.c: Show FONTDIR of OFM format.
+
 2019-02-25  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
 
 	* chkdvifont.c: Forbid too long file name.
