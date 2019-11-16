@@ -967,7 +967,7 @@ void tfm_define(FILE * fp)
             printf("\t\tPARAMETERS:\n");
             if (ch == 'j')
                 printf("\t\t  nt: %5d\n", nt);
-            printf("\t\t  lh: %5ld\n",  lh);
+            printf("\t\t  lh: %5ld\n", lh);
             printf("\t\t  bc: %5ld\n", bc);
             printf("\t\t  ec: %5ld\n", ec);
             printf("\t\t  nw: %5ld\n", nw);
