@@ -967,7 +967,7 @@ void tfm_define(FILE * fp)
             printf("\t\tPARAMETERS:\n");
             if (ch == 'j')
                 printf("\t\t  nt: %5d\n", nt);
-            printf("\t\t  lh: %5d\n",  lh);
+            printf("\t\t  lh: %5ld\n",  lh);
             printf("\t\t  bc: %5ld\n", bc);
             printf("\t\t  ec: %5ld\n", ec);
             printf("\t\t  nw: %5ld\n", nw);
@@ -977,9 +977,9 @@ void tfm_define(FILE * fp)
             printf("\t\t  nl: %5ld\n", nl);
             printf("\t\t  nk: %5ld\n", nk);
             if (ch == 'j')
-                printf("\t\t  ng: %5d\n", ne); /* ng */
+                printf("\t\t  ng: %5ld\n", ne); /* ng */
             else
-                printf("\t\t  ne: %5d\n", ne);
+                printf("\t\t  ne: %5ld\n", ne);
             printf("\t\t  np: %5ld\n", np);
             if (ch == 'o') {
                 printf("\t\t+ FONTDIR: ");
