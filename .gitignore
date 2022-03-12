@@ -7,3 +7,9 @@ tests/*.toc
 tests/*.synctex
 tests/*.synctex.gz
 tests/*.synctex.gz(busy)
+
+# ignore auto-generated files in 00texjporg/
+Makefile.in
+aclocal.m4
+config.h.in
+configure
